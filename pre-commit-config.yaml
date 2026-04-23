@@ -1,0 +1,81 @@
+# Pre-commit hooks configuration
+# https://pre-commit.com
+#
+# Install:  pre-commit install
+# Run all:  pre-commit run --all-files
+# Update:   pre-commit autoupdate
+# Run:      pre-commit run --all-files
+
+default_language_version:
+  python: python3.12
+
+repos:
+  # General hygiene hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace # Remove trailing whitespace
+        args: ['--markdown-linebreak-ext=md']
+        exclude: \.(png|jpg|jpeg|gif|svg|ico|webp|ttf|woff|woff2)$
+      - id: end-of-file-fixer # Ensure files end with newline
+        exclude: \.(png|jpg|jpeg|gif|svg|ico|webp|ttf|woff|woff2)$
+      - id: check-yaml # Validate YAML syntax
+      - id: check-json # Validate JSON syntax
+      - id: check-xml # Validate XML syntax
+      - id: check-added-large-files # Prevent giant files from being committed
+        args: ['--maxkb=500']
+      - id: check-merge-conflict # Detect merge conflict markers
+      - id: mixed-line-ending # Detect mixed line endings
+        exclude: \.(png|jpg|jpeg|gif|svg|ico|webp|ttf|woff|woff2)$
+      - id: check-case-conflict # Detect files that would conflict on case-insensitive filesystems
+      #- id: detect-private-key # Prevent committing private keys (....i not sure if this is useful in this state of the project, but it can be enabled later if needed)
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.44.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: \.(md|markdown)$
+
+  # Python - Ruff (linting + formatting)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.11
+    hooks:
+      - id: ruff
+        args: ['--fix']
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  # Type checking (optional - remove if not using type hints)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        args: ['--ignore-missing-imports', '--no-error-summary']
+        files: ^backend/
+        exclude: ^backend/.*/migrations/
+
+  # Frontend React (ESLint)
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint (Frontend)
+        entry: npm run lint --prefix frontend
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+
+  # Django migrations check
+  # Disabled: Requires Django to be installed in the pre-commit environment
+  # DMsuDev Note: I don't want to add Django as a dependency for pre-commit just to check for uncreated migrations, so this hook is disabled. Instead, use `make migrate` locally to check for uncreated migrations before committing.
+  # Use `make migrate` locally to check for uncreated migrations
+  # - repo: local
+  #   hooks:
+  #     - id: migrations-check
+  #       name: Check for uncreated migrations
+  #       entry: python backend/manage.py makemigrations --check --dry-run
+  #       language: system
+  #       files: ^backend/.*models\.py$
+  #       pass_filenames: false

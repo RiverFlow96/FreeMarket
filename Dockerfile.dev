@@ -1,0 +1,15 @@
+# Use a slightly larger image for development tools/debugging
+FROM python:3.12-slim AS base
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY backend/ backend/
+COPY manage.py backend/
+
+# Define entry point for local development usage
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
