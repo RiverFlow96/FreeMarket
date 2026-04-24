@@ -14,9 +14,11 @@ inflection==0.5.1
 jsonschema==4.26.0
 jsonschema-specifications==2025.9.1
 nodeenv==1.10.0
+pillow==12.2.0
 platformdirs==4.9.6
 pre-commit==4.6.0
 pyjwt==2.12.1
+python-decouple==3.8
 python-discovery==1.2.2
 pyyaml==6.0.3
 referencing==0.37.0
