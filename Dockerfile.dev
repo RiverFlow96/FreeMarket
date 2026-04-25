@@ -3,13 +3,23 @@ FROM python:3.12-slim AS base
 
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/requirements.txt .
 
 # Copy the rest of the application code
-COPY backend/ backend/
-COPY manage.py backend/
+COPY backend/ ./backend/
+
+
+# update pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt
+
+WORKDIR /app/backend
+
+EXPOSE 8000
 
 # Define entry point for local development usage
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+RUN python manage.py migrate
+CMD ["python", "manage.py", "runserver"]
