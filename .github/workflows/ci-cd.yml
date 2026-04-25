@@ -55,19 +55,19 @@ jobs:
       - name: Install dependencies
         run: |
           cd frontend
-          npm ci
+          bun ci
       - name: Lint
         run: |
           cd frontend
-          npm run lint
+          bun run lint
       - name: Build
         run: |
           cd frontend
-          npm run build
+          bun run build
       - name: Run tests
         run: |
           cd frontend
-          npm test || true
+          bun run test || true
 
   docker:
     name: Docker Build
