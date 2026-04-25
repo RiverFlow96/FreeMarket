@@ -18,7 +18,8 @@ Thumbs.db
 # Django/Python specific files (if generated locally)
 /media/
 /static/
-*/migrations/*/__pycache__
+*/*/migrations/*/__pycache__
+backend/apps/*/migrations/
 */*.egg-info/
 
 # Local IDE/Editor Files
@@ -30,4 +31,3 @@ Thumbs.db
 .continue/
 
 TODO.md
-
