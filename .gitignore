@@ -27,7 +27,8 @@ backend/apps/*/migrations/
 *.swp
 *~
 
-# Continue Configurations
+# AI Configurations
 .continue/
+AGENTS.md
 
 TODO.md
