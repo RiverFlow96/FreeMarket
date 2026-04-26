@@ -15,9 +15,9 @@ class Product(models.Model):
         return f"Producto: {self.name}"
 
 
-class ProductsGroup(models.Model):
-    owner = models.ForeignKey("users.Profile", on_delete=models.CASCADE)
-    products = models.ManyToManyField(Product)
+# class ProductsGroup(models.Model):
+#     owner = models.ForeignKey("users.Profile", on_delete=models.CASCADE)
+#     products = models.ManyToManyField(Product)
 
-    def __str__(self):
-        return f"Grupo de productos de: {self.owner}"
+#     def __str__(self):
+#         return f"Grupo de productos de: {self.owner}"

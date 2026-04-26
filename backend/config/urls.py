@@ -39,7 +39,7 @@ router = routers.DefaultRouter()
 # Register routes for add routes to router
 router.register(r"users", UserViewSet, "users")
 router.register(r"products", ProductViewSet, "products")
-router.register(r"products-groups", ProductViewSet, "products-group")
+# router.register(r"products-groups", ProductsGroupViewSet, "products-group")
 router.register(r"categories", CategoryViewSet, "categories")
 
 urlpatterns = [
