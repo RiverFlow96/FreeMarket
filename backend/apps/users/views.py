@@ -1,12 +1,10 @@
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from .models import Profile
 from .serializers import UserSerializer
+from rest_framework.permissions import IsAuthenticated
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
+    permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
     queryset = Profile.objects.all()
-    
