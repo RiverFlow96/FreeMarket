@@ -1,10 +1,10 @@
 from rest_framework import viewsets
-from .models import Profile
+from .models import User
 from .serializers import UserSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = UserSerializer
-    queryset = Profile.objects.all()
+    queryset = User.objects.all()
