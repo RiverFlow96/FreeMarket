@@ -1,17 +1,15 @@
 from .models import Product
 from .serializers import ProductSerializer
+from .permissions import IsAdminOrOwner
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 
 
-# Create your views here.
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
-    queryset = Product.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
-
-# class ProductsGroupViewSet(viewsets.ModelViewSet):
-#     permission_classes = [IsAuthenticated]
-#     serializer_class = ProductsGroupSerializer
-
-#     def get_queryset(self):
-#         return ProductsGroup.objects.filter(owner=self.request.user.user)
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Product.objects.all()
+        return Product.objects.filter(seller=self.request.user)
