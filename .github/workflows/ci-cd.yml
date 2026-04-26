@@ -52,6 +52,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+      - name: Install bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
       - name: Install dependencies
         run: |
           cd frontend
