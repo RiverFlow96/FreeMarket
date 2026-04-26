@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import Profile
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Profile
-        fields = ["username", "email", "number", "date_joined"]
+        model = User
+        fields = ["username", "email", "phone", "date_joined"]
 
     def get_queryset(self):
         user = self.request.user

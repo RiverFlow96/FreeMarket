@@ -14,4 +14,4 @@ class ProductViewSet(viewsets.ModelViewSet):
 #     serializer_class = ProductsGroupSerializer
 
 #     def get_queryset(self):
-#         return ProductsGroup.objects.filter(owner=self.request.user.profile)
+#         return ProductsGroup.objects.filter(owner=self.request.user.user)
