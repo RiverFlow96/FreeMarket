@@ -27,6 +27,12 @@ from apps.categories.views import CategoryViewSet
 # Import rest_framework library for make urls with routers function
 from rest_framework import routers
 
+# Import SimpleJWT libraries
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 # Start router from DefaultRouter
 router = routers.DefaultRouter()
 
@@ -48,4 +54,7 @@ urlpatterns = [
         SpectacularSwaggerView.as_view(url_name="schema"),
         name="swagger-ui",
     ),
+    # JWT Urls
+    path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
