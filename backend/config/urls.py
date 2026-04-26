@@ -19,10 +19,29 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularSwaggerView, SpectacularAPIView
 
+# Viewsets
+from apps.users.views import UserViewSet
+from apps.products.views import ProductViewSet
+from apps.categories.views import CategoryViewSet
+
+# Import rest_framework library for make urls with routers function
+from rest_framework import routers
+
+# Start router from DefaultRouter
+router = routers.DefaultRouter()
+
+# Register routes for add routes to router
+router.register(r"users", UserViewSet, "users")
+router.register(r"products", ProductViewSet, "products")
+router.register(r"products-groups", ProductViewSet, "products-group")
+router.register(r"categories", CategoryViewSet, "categories")
+
 urlpatterns = [
+    # Admin Panel Url
     path("admin/", admin.site.urls),
-    path("api/v1/", include("apps.users.urls")),
-    path("api/v1/", include("apps.products.urls")),
+    # API Urls
+    path("api/v1/", include(router.urls)),
+    # API Docs
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/v1/doc/",
