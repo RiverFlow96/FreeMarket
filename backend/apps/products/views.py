@@ -23,6 +23,9 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Product.objects.all()
         return Product.objects.all()
 
+    def perform_create(self, serializer):
+        serializer.save(seller=self.request.user)
+
     @action(detail=False, methods=["get"], url_path="search")
     def search(self, request):
         query = request.query_params.get("search", "")

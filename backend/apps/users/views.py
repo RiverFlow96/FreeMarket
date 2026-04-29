@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from .models import User
-from .serializers import UserSerializer
-from rest_framework.permissions import IsAuthenticated
+from .serializers import UserSerializer, UserCreateSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import permissions
 
 
@@ -16,6 +16,16 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     serializer_class = UserSerializer
     queryset = User.objects.all()
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [AllowAny()]
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return UserCreateSerializer
+        return UserSerializer
 
     def get_queryset(self):
         if self.request.user.is_staff:

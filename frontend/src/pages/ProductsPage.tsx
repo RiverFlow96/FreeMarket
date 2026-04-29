@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
+import { formatPrice } from "@/utils/currency";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -211,13 +211,6 @@ export default function ProductsPage() {
     fetchProducts("");
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(price);
-  };
-
   const activeFiltersCount = () => {
     let count = 0;
     if (query) count++;
@@ -225,6 +218,8 @@ export default function ProductsPage() {
     if (priceRange[0] > 0 || priceRange[1] < maxPrice) count++;
     return count;
   };
+
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <div className="min-h-screen bg-background">
@@ -248,14 +243,29 @@ export default function ProductsPage() {
                 FreeMarket
               </Link>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSidebar(!showSidebar)}
-              className="hidden lg:flex"
-            >
-              {showSidebar ? <PanelLeftClose /> : <Menu />}
-            </Button>
+            <div className="flex items-center gap-2">
+              {isAuthenticated ? (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/sell">Vender</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link to="/register">Registrarse</Link>
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSidebar(!showSidebar)}
+              >
+                {showSidebar ? <PanelLeftClose /> : <Menu />}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -420,8 +430,8 @@ export default function ProductsPage() {
                     key={product.id}
                     className="block h-full"
                   >
-                    <Card className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group">
-                      <div className="aspect-square relative bg-muted overflow-hidden">
+                    <Card className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group flex flex-col">
+                      <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
                         {showImage ? (
                           <img
                             src={cleanedUrl}
@@ -437,31 +447,31 @@ export default function ProductsPage() {
                           </div>
                         )}
                       </div>
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-sm sm:text-base line-clamp-1">
-                          {product.name}
-                        </CardTitle>
-                        {product.category_name && (
-                          <Badge
-                            variant="secondary"
-                            className="mt-1 w-fit text-xs"
-                          >
-                            {product.category_name}
-                          </Badge>
-                        )}
-                      </CardHeader>
-                      <CardContent className="p-3 pt-0">
-                        <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                          {product.description}
-                        </CardDescription>
-                      </CardContent>
-                      <CardFooter className="p-3 pt-0">
-                        <div className="flex items-center justify-between w-full">
+                      <div className="flex flex-col flex-1 p-3 sm:p-4 pt-0">
+                        <CardHeader className="p-0 mb-2">
+                          <CardTitle className="text-sm sm:text-base line-clamp-1">
+                            {product.name}
+                          </CardTitle>
+                          {product.category_name && (
+                            <Badge
+                              variant="secondary"
+                              className="mt-1 w-fit text-xs"
+                            >
+                              {product.category_name}
+                            </Badge>
+                          )}
+                        </CardHeader>
+                        <div className="flex-1">
+                          <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                            {product.description}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center justify-between w-full mt-3">
                           <span className="text-lg sm:text-xl font-bold text-primary">
                             {formatPrice(product.price)}
                           </span>
                         </div>
-                      </CardFooter>
+                      </div>
                     </Card>
                   </Link>
                 );

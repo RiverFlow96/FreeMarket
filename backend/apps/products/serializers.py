@@ -7,6 +7,7 @@ class ProductSerializer(serializers.ModelSerializer):
     seller_name = serializers.CharField(source="seller.username", read_only=True)
     seller_email = serializers.EmailField(source="seller.email", read_only=True)
     seller_phone = serializers.IntegerField(source="seller.phone", read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -22,6 +23,12 @@ class ProductSerializer(serializers.ModelSerializer):
             "seller_email",
             "seller_phone",
         ]
+        extra_kwargs = {
+            "image": {"read_only": True},
+        }
+
+    def get_image(self, obj):
+        return obj.display_image
 
 
 # class ProductsGroupSerializer(serializers.ModelSerializer):

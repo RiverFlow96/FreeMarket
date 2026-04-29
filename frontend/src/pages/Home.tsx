@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
 import { ShoppingBag, Package, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/authStore";
 
 export function Home() {
+  const { isAuthenticated } = useAuthStore();
+
   return (
     <div className="min-h-screen w-full">
       <section className="relative min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100/50 overflow-hidden">
@@ -33,9 +36,15 @@ export function Home() {
             <Button variant="outline" asChild>
               <Link to="/products">Explorar productos</Link>
             </Button>
-            <Button asChild>
-              <Link to="/products">Empezar a vender</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild>
+                <Link to="/sell">Vender producto</Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link to="/register">Regístrate para vender</Link>
+              </Button>
+            )}
           </div>
         </div>
 

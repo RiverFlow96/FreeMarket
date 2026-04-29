@@ -15,6 +15,29 @@ La página `/products` incluye filtros avanzados:
 - **Ordenamiento:** Por nombre (A-Z, Z-A) o precio (menor, mayor)
 - Los filtros se aplican en tiempo real en el frontend
 
+## Toast Notifications
+
+El proyecto usa un sistema de Toast personalizado basado en shadcn/ui:
+
+- **Archivos creados:**
+  - `frontend/src/components/ui/use-toast.ts` - Hook para mostrar toasts
+  - `frontend/src/components/ui/toast.tsx` - Componente Toast
+  - `frontend/src/components/ui/toaster.tsx` - Contenedor de toasts
+- **Uso en componentes:**
+
+  ```typescript
+  import { toast } from "@/components/ui/use-toast";
+
+  toast({
+    title: "Título",
+    description: "Descripción",
+    variant: "success" | "destructive" | "default",
+  });
+  ```
+
+- **Variantes disponibles:** default, destructive, success
+- El Toaster debe estar incluido en App.tsx: `<Toaster />`
+
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
 
 ---

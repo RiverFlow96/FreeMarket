@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatPrice } from "@/utils/currency";
 
 interface Product {
   id: number;
@@ -72,13 +73,6 @@ export default function ProductDetail() {
 
     fetchProduct();
   }, [id]);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(price);
-  };
 
   if (loading) {
     return (
