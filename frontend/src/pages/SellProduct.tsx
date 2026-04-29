@@ -78,35 +78,48 @@ export default function SellProduct() {
       }
 
       if (!res.ok) {
-        const data = await res.json();
-        const errors = Object.entries(data);
         const errorMessages: string[] = [];
 
-        for (const [field, messages] of errors) {
-          if (Array.isArray(messages)) {
-            for (const msg of messages) {
-              if (field === "name") {
-                errorMessages.push(`Nombre: ${msg}`);
-              } else if (field === "description") {
-                errorMessages.push(`Descripción: ${msg}`);
-              } else if (field === "price") {
-                errorMessages.push(`Precio: ${msg}`);
-              } else if (field === "category") {
-                errorMessages.push(`Categoría: ${msg}`);
-              } else {
-                errorMessages.push(msg);
+        try {
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            const errors = Object.entries(data);
+
+            for (const [field, messages] of errors) {
+              if (Array.isArray(messages)) {
+                for (const msg of messages) {
+                  if (field === "name") {
+                    errorMessages.push(`Nombre: ${msg}`);
+                  } else if (field === "description") {
+                    errorMessages.push(`Descripción: ${msg}`);
+                  } else if (field === "price") {
+                    errorMessages.push(`Precio: ${msg}`);
+                  } else if (field === "category") {
+                    errorMessages.push(`Categoría: ${msg}`);
+                  } else {
+                    errorMessages.push(msg);
+                  }
+                }
               }
             }
           }
+        } catch {
+          // La respuesta no es JSON válido
         }
 
         if (errorMessages.length === 0) {
-          throw new Error("No se pudo publicar el producto. Por favor, verifica los datos e inténtalo de nuevo.");
+          throw new Error(`Error ${res.status}: No se pudo publicar el producto.`);
         }
         throw new Error(errorMessages.join(". "));
       }
 
-      const product = await res.json();
+      let product;
+      try {
+        product = await res.json();
+      } catch {
+        throw new Error("Producto publicado pero no se pudo obtener la respuesta del servidor.");
+      }
 
       toast({
         title: "Producto publicado",

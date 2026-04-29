@@ -5,10 +5,11 @@ import ProductDetail from "../pages/ProductDetail";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import SellProduct from "../pages/SellProduct";
+import Profile from "../pages/Profile";
 import { useAuthStore } from "../store/authStore";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, LogOut, PlusCircle } from "lucide-react";
+import { ShoppingBag, LogOut, PlusCircle, User } from "lucide-react";
 
 function Navbar() {
   const { isAuthenticated, logout, user } = useAuthStore();
@@ -23,6 +24,12 @@ function Navbar() {
 
         {isAuthenticated ? (
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/profile">
+                <User className="w-4 h-4 mr-2" />
+                Mi Perfil
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" asChild>
               <Link to="/sell">
                 <PlusCircle className="w-4 h-4 mr-2" />
@@ -73,6 +80,7 @@ export default function Router() {
 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Layout><Profile /></Layout>} />
 
           <Route path="/sell" element={<Layout><SellProduct /></Layout>} />
         </Routes>

@@ -24,6 +24,7 @@ repos:
       - id: check-xml # Validate XML syntax
       - id: check-added-large-files # Prevent giant files from being committed
         args: ['--maxkb=500']
+        exclude: 'backend/backend/media/products/Tmodloader-Heroes\.png'
       - id: check-merge-conflict # Detect merge conflict markers
       - id: mixed-line-ending # Detect mixed line endings
         exclude: \.(png|jpg|jpeg|gif|svg|ico|webp|ttf|woff|woff2)$

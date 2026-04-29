@@ -38,6 +38,38 @@ El proyecto usa un sistema de Toast personalizado basado en shadcn/ui:
 - **Variantes disponibles:** default, destructive, success
 - El Toaster debe estar incluido en App.tsx: `<Toaster />`
 
+## Información del vendedor
+
+En los detalles del producto (`ProductDetail.tsx`) se muestra:
+
+- Nombre del vendedor
+- Email
+- Teléfono (si el vendedor lo agregó)
+- Dirección (si el vendedor la agregó)
+- Botones para enviar mensaje o llamar
+
+El modelo de usuario tiene campos:
+
+- `phone`: Número de teléfono (opcional)
+- `address`: Dirección (opcional)
+
+## Archivos media
+
+Las imágenes de productos se sirven desde `backend/media/`. En desarrollo, Django sirve estos archivos automáticamente.
+
+## Registro de usuarios
+
+El formulario de registro (`Register.tsx`) incluye:
+
+- Usuario, email, contraseña (requeridos)
+- Teléfono (opcional)
+- Dirección (opcional)
+
+## Notas de desarrollo
+
+- Ejecutar `python manage.py migrate` para agregar el campo `address` a la base de datos
+- El proxy de Vite reenvía `/api` a `localhost:8000`
+
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
 
 ---

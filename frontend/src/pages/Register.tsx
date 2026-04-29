@@ -4,13 +4,14 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingBag, Loader2 } from "lucide-react";
+import { ShoppingBag, Loader2, MapPin } from "lucide-react";
 
 export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
@@ -25,7 +26,7 @@ export default function Register() {
       const res = await fetch("/api/v1/users/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, phone: phone || null }),
+        body: JSON.stringify({ username, email, password, phone: phone || null, address: address || "" }),
       });
 
       if (!res.ok) {
@@ -124,6 +125,19 @@ export default function Register() {
                 placeholder="1234567890"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="address" className="text-sm font-medium flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Dirección (opcional)
+              </label>
+              <Input
+                id="address"
+                type="text"
+                placeholder="Calle, ciudad, provincia..."
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
               />
             </div>
             <div className="space-y-2">

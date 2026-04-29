@@ -27,6 +27,8 @@ import {
   ShoppingBag,
   Menu,
   PanelLeftClose,
+  LogOut,
+  PlusCircle,
 } from "lucide-react";
 
 interface Product {
@@ -48,26 +50,26 @@ type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
 function cleanImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
-    if (url.includes("/backend/media/")) {
-      const match = url.match(/\/backend\/media\/(.+)/);
-      if (match) {
-        let extractedUrl = decodeURIComponent(match[1]);
-        extractedUrl = extractedUrl
-          .replace(/^http:\/+/, "https://")
-          .replace(/^https:\/+/, "https://");
-        if (
-          extractedUrl.startsWith("http://") ||
-          extractedUrl.startsWith("https://")
-        ) {
-          return extractedUrl;
-        }
-      }
-    }
     const decoded = decodeURIComponent(url);
+
     if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
       return decoded;
     }
-    return null;
+
+    if (decoded.startsWith("/backend/media/")) {
+      return decoded;
+    }
+
+    if (decoded.startsWith("/media/")) {
+      return decoded;
+    }
+
+    if (decoded.includes("/media/")) {
+      const match = decoded.match(/(\/media\/.+)/);
+      if (match) return match[1];
+    }
+
+    return decoded;
   } catch {
     return null;
   }
@@ -219,35 +221,53 @@ export default function ProductsPage() {
     return count;
   };
 
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, logout, user } = useAuthStore();
 
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSidebar(!showSidebar)}
-                className="lg:hidden"
+                className="text-muted-foreground hover:text-foreground"
+                title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
-                {showSidebar ? <PanelLeftClose /> : <Menu />}
+                <Menu className="w-5 h-5" />
               </Button>
               <Link
                 to="/"
-                className="text-xl sm:text-2xl font-bold text-primary flex items-center gap-2"
+                className="text-lg sm:text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity"
               >
-                <ShoppingBag className="w-6 h-6" />
-                FreeMarket
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="hidden sm:inline">FreeMarket</span>
               </Link>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {isAuthenticated ? (
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/sell">Vender</Link>
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                    <Link to="/sell">
+                      <PlusCircle className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="hidden md:inline">Vender</span>
+                    </Link>
+                  </Button>
+                  <span className="text-sm text-muted-foreground hidden lg:inline">
+                    {user?.username}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={logout}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Cerrar sesión"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button variant="ghost" size="sm" asChild>
@@ -262,8 +282,10 @@ export default function ProductsPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSidebar(!showSidebar)}
+                className="lg:hidden text-muted-foreground hover:text-foreground"
+                title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
-                {showSidebar ? <PanelLeftClose /> : <Menu />}
+                {showSidebar ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
             </div>
           </div>

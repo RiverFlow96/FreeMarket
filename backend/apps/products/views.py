@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -35,3 +36,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             products = Product.objects.all()
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    def delete_product(self, request, pk=None):
+        product = self.get_object()
+        if product.seller != request.user and not request.user.is_staff:
+            return Response(
+                {"error": "No tienes permiso para eliminar este producto."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

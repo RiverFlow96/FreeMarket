@@ -84,7 +84,7 @@ ToastAction.displayName = "ToastAction"
 const ToastClose = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
->(({ className, ...props }, ref) => (
+>(({ className, onClick, ...props }, ref) => (
   <button
     ref={ref}
     className={cn(
@@ -92,6 +92,9 @@ const ToastClose = React.forwardRef<
       className
     )}
     toast-close=""
+    onClick={(event) => {
+      onClick?.(event)
+    }}
     {...props}
   >
     <X className="h-4 w-4" />

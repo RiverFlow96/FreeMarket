@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingBag, ArrowLeft, Mail, Phone, User } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Mail, Phone, User, MapPin, Send } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatPrice } from "@/utils/currency";
+import { ContactSellerDialog } from "@/components/ContactSellerDialog";
 
 interface Product {
   id: number;
@@ -23,26 +24,32 @@ interface Product {
   seller_name?: string;
   seller_email?: string;
   seller_phone?: number | null;
+  seller_address?: string | null;
 }
 
 function cleanImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
-    if (url.includes("/backend/media/")) {
-      const match = url.match(/\/backend\/media\/(.+)/);
-      if (match) {
-        let extractedUrl = decodeURIComponent(match[1]);
-        extractedUrl = extractedUrl.replace(/^http:\/+/, "https://").replace(/^https:\/+/, "https://");
-        if (extractedUrl.startsWith("http://") || extractedUrl.startsWith("https://")) {
-          return extractedUrl;
-        }
-      }
-    }
     const decoded = decodeURIComponent(url);
+
     if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
       return decoded;
     }
-    return null;
+
+    if (decoded.startsWith("/backend/media/")) {
+      return decoded;
+    }
+
+    if (decoded.startsWith("/media/")) {
+      return decoded;
+    }
+
+    if (decoded.includes("/media/")) {
+      const match = decoded.match(/(\/media\/.+)/);
+      if (match) return match[1];
+    }
+
+    return decoded;
   } catch {
     return null;
   }
@@ -54,6 +61,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState(false);
+  const [showContactDialog, setShowContactDialog] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -112,16 +120,16 @@ export default function ProductDetail() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="aspect-square lg:aspect-auto lg:h-[500px] bg-muted rounded-lg overflow-hidden">
+          <div className="relative w-full max-w-md mx-auto lg:max-w-none aspect-square lg:aspect-[4/3] bg-muted rounded-lg overflow-hidden">
             {showImage ? (
               <img
                 src={cleanedUrl}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-contain"
                 onError={() => setImageError(true)}
               />
             ) : (
-              <div className="flex items-center justify-center h-full">
+              <div className="absolute inset-0 flex items-center justify-center">
                 <ShoppingBag className="w-24 h-24 text-muted-foreground/50" />
               </div>
             )}
@@ -203,6 +211,18 @@ export default function ProductDetail() {
                   </div>
                 )}
 
+                {product.seller_address && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <MapPin className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Dirección</p>
+                      <p className="font-medium">{product.seller_address}</p>
+                    </div>
+                  </div>
+                )}
+
                 {!product.seller_email && !product.seller_phone && (
                   <p className="text-muted-foreground text-sm">
                     No hay información de contacto disponible.
@@ -210,20 +230,13 @@ export default function ProductDetail() {
                 )}
               </CardContent>
               <CardFooter className="flex gap-2">
-                {product.seller_email && (
-                  <Button className="flex-1" asChild>
-                    <a href={`mailto:${product.seller_email}?subject=Consulta sobre: ${product.name}`}>
-                      <Mail className="w-4 h-4 mr-2" />
-                      Enviar mensaje
-                    </a>
-                  </Button>
-                )}
-                {product.seller_phone && (
-                  <Button variant="outline" className="flex-1" asChild>
-                    <a href={`tel:${product.seller_phone}`}>
-                      <Phone className="w-4 h-4 mr-2" />
-                      Llamar
-                    </a>
+                {(product.seller_email || product.seller_phone) && (
+                  <Button
+                    className="flex-1"
+                    onClick={() => setShowContactDialog(true)}
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Contactar vendedor
                   </Button>
                 )}
               </CardFooter>
@@ -231,6 +244,15 @@ export default function ProductDetail() {
           </div>
         </div>
       </main>
+
+      <ContactSellerDialog
+        open={showContactDialog}
+        onOpenChange={setShowContactDialog}
+        sellerName={product.seller_name || "Vendedor"}
+        sellerEmail={product.seller_email}
+        sellerPhone={product.seller_phone}
+        productName={product.name}
+      />
     </div>
   );
 }
