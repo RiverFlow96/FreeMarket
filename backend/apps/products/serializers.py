@@ -3,9 +3,19 @@ from .models import Product
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+
     class Meta:
         model = Product
-        fields = ["name", "description", "price", "category", "image", "seller"]
+        fields = [
+            "id",
+            "name",
+            "description",
+            "price",
+            "category",
+            "category_name",
+            "image",
+        ]
 
 
 # class ProductsGroupSerializer(serializers.ModelSerializer):

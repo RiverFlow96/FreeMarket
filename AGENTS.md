@@ -1,5 +1,39 @@
+## Convenciones de búsqueda y productos
+
+- La barra de búsqueda en la página de inicio redirige a `/products?q=...`.
+- La página de productos (`/products`) consume la API REST de Django (`/api/v1/products/`) y muestra los productos según el término de búsqueda.
+- El endpoint de productos es público (`AllowAny`) para permitir visualización sin autenticación.
+- Los endpoints de creación/edición/eliminación requieren autenticación (`IsAuthenticated`).
+
+## Filtros en página de productos
+
+La página `/products` incluye filtros avanzados:
+
+- **Búsqueda:** Por nombre de producto
+- **Categoría:** Filtro por categoría (usa API `/api/v1/categories/`)
+- **Precio:** Rango de precio con slider (0-5000 ARS)
+- **Ordenamiento:** Por nombre (A-Z, Z-A) o precio (menor, mayor)
+- Los filtros se aplican en tiempo real en el frontend
 
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
+
+---
+
+## Reglas permanentes para agentes y commits
+
+- **Actualización obligatoria de AGENTS.md:**
+  - Siempre que realices un cambio en el proyecto, actualiza este archivo para reflejar nuevas convenciones, reglas o prácticas.
+  - Si agregas una nueva convención, documenta el cambio aquí antes de finalizar la tarea.
+  - Si olvidas actualizar AGENTS.md, considera la tarea incompleta.
+- **Commits en formato Conventional Commits:**
+  - Todos los mensajes de commit deben seguir el estándar Conventional Commits (https://www.conventionalcommits.org/):
+    - Estructura: &lt;tipo&gt;(&lt;área&gt;): &lt;descripción&gt;
+    - Tipos válidos: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+    - El área debe ser el módulo, carpeta o funcionalidad afectada (ej: frontend, backend, products, users, docker, etc).
+    - La descripción debe ser breve y en imperativo.
+    - Ejemplo: feat(frontend): mejora landing de búsqueda
+    - Ejemplo: fix(backend): corrige error en serializador de productos
+    - Ejemplo: docs(AGENTS): agrega regla de actualización de convenciones
 
 This file provides essential guidance for AI coding agents working in this repository. It summarizes conventions, build/test commands, and project structure to help agents be immediately productive. For more details, see the [README.md](README.md).
 

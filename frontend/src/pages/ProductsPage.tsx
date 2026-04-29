@@ -1,0 +1,473 @@
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useLocation, Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
+import {
+  Filter,
+  X,
+  Search,
+  ShoppingBag,
+  Menu,
+  PanelLeftClose,
+} from "lucide-react";
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image?: string | null;
+  category_name?: string;
+  category?: number;
+}
+
+interface Category {
+  name: string;
+}
+
+type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
+
+function cleanImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    if (url.includes("/backend/media/")) {
+      const match = url.match(/\/backend\/media\/(.+)/);
+      if (match) {
+        let extractedUrl = decodeURIComponent(match[1]);
+        extractedUrl = extractedUrl
+          .replace(/^http:\/+/, "https://")
+          .replace(/^https:\/+/, "https://");
+        if (
+          extractedUrl.startsWith("http://") ||
+          extractedUrl.startsWith("https://")
+        ) {
+          return extractedUrl;
+        }
+      }
+    }
+    const decoded = decodeURIComponent(url);
+    if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
+      return decoded;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const location = useLocation();
+
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
+  const [maxPrice, setMaxPrice] = useState(2000);
+  const [sortBy, setSortBy] = useState<SortOption>("name-asc");
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+  const params = new URLSearchParams(location.search);
+  const query = params.get("q") || "";
+
+  const fetchProducts = useCallback(async (searchTerm: string) => {
+    setLoading(true);
+    setError("");
+    const url = searchTerm
+      ? `/api/v1/products/search/?search=${encodeURIComponent(searchTerm)}`
+      : "/api/v1/products/";
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Error al obtener productos");
+      const data = await res.json();
+      const productsData = Array.isArray(data) ? data : data.results || data;
+      setProducts(productsData);
+
+      if (productsData.length > 0) {
+        const prices = productsData.map((p: Product) => p.price);
+        const max = Math.max(...prices);
+        setMaxPrice(max);
+        setPriceRange([0, max]);
+      }
+    } catch {
+      setError("No se pudieron cargar los productos.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
+
+    if (selectedCategory !== "all") {
+      result = result.filter((p) => p.category_name === selectedCategory);
+    }
+
+    result = result.filter(
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
+    );
+
+    switch (sortBy) {
+      case "name-asc":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "price-asc":
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case "price-desc":
+        result.sort((a, b) => b.price - a.price);
+        break;
+    }
+
+    return result;
+  }, [products, selectedCategory, priceRange, sortBy]);
+
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const [categoriesRes, productsRes] = await Promise.all([
+          fetch("/api/v1/categories/"),
+          fetch(
+            query
+              ? `/api/v1/products/search/?search=${encodeURIComponent(query)}`
+              : "/api/v1/products/",
+          ),
+        ]);
+
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData.results || categoriesData);
+
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          const productsList = Array.isArray(productsData)
+            ? productsData
+            : productsData.results || productsData;
+          setProducts(productsList);
+
+          if (productsList.length > 0) {
+            const prices = productsList.map((p: Product) => p.price);
+            const max = Math.max(...prices);
+            setMaxPrice(max);
+            setPriceRange([0, max]);
+          }
+        } else {
+          setError("No se pudieron cargar los productos.");
+        }
+      } catch (err) {
+        console.error("Error loading data:", err);
+        setError("Error al cargar los datos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, [query]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newUrl = searchQuery
+      ? `/products?q=${encodeURIComponent(searchQuery)}`
+      : "/products";
+    window.history.pushState({}, "", newUrl);
+    fetchProducts(searchQuery);
+  };
+
+  const handleImageError = (productId: number) => {
+    setImageErrors((prev) => new Set(prev).add(productId));
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory("all");
+    setSortBy("name-asc");
+    setPriceRange([0, maxPrice]);
+    setSearchQuery("");
+    window.history.pushState({}, "", "/products");
+    fetchProducts("");
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: "ARS",
+    }).format(price);
+  };
+
+  const activeFiltersCount = () => {
+    let count = 0;
+    if (query) count++;
+    if (selectedCategory !== "all") count++;
+    if (priceRange[0] > 0 || priceRange[1] < maxPrice) count++;
+    return count;
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="lg:hidden"
+              >
+                {showSidebar ? <PanelLeftClose /> : <Menu />}
+              </Button>
+              <Link
+                to="/"
+                className="text-xl sm:text-2xl font-bold text-primary flex items-center gap-2"
+              >
+                <ShoppingBag className="w-6 h-6" />
+                FreeMarket
+              </Link>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="hidden lg:flex"
+            >
+              {showSidebar ? <PanelLeftClose /> : <Menu />}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-6">
+        <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
+          <Link to="/" className="text-muted-foreground hover:text-primary">
+            Inicio
+          </Link>
+          <span className="text-muted-foreground">/</span>
+          <span className="text-foreground">Productos</span>
+          {query && (
+            <>
+              <span className="text-muted-foreground">/</span>
+              <span className="text-foreground">"{query}"</span>
+            </>
+          )}
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6">
+          {showSidebar && (
+            <aside className="lg:w-64 shrink-0">
+              <div className="lg:sticky lg:top-24 space-y-6">
+                <div>
+                  <h3 className="font-medium mb-3 text-sm">Buscar</h3>
+                  <form onSubmit={handleSearch} className="flex gap-2">
+                    <Input
+                      type="search"
+                      placeholder="Buscar..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full"
+                    />
+                    <Button type="submit" variant="default" size="icon">
+                      <Search className="w-4 h-4" />
+                    </Button>
+                  </form>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-medium mb-3 text-sm">Categoría</h3>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Todas las categorías" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.name} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-medium mb-3 text-sm">Precio</h3>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={(val) =>
+                      setPriceRange(val as [number, number])
+                    }
+                    min={0}
+                    max={maxPrice || 5000}
+                    step={maxPrice > 1000 ? 100 : 50}
+                    className="mb-3"
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>{formatPrice(priceRange[0])}</span>
+                    <span>{formatPrice(priceRange[1])}</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-medium mb-3 text-sm">Ordenar por</h3>
+                  <Select
+                    value={sortBy}
+                    onValueChange={(val) => setSortBy(val as SortOption)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
+                      <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
+                      <SelectItem value="price-asc">Precio (menor)</SelectItem>
+                      <SelectItem value="price-desc">Precio (mayor)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {activeFiltersCount() > 0 && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={clearFilters}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Limpiar filtros
+                  </Button>
+                )}
+              </div>
+            </aside>
+          )}
+
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold">
+                {query ? `Resultados para "${query}"` : "Todos los productos"}
+              </h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Filter className="w-4 h-4" />
+                <span>
+                  {filteredProducts.length}{" "}
+                  {filteredProducts.length === 1 ? "producto" : "productos"}
+                </span>
+              </div>
+            </div>
+
+            {loading && (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-destructive/10 text-destructive p-4 rounded-lg text-center">
+                {error}
+              </div>
+            )}
+
+            {!loading && !error && filteredProducts.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg mb-4">
+                  No se encontraron productos con los filtros aplicados.
+                </p>
+                <Button variant="link" onClick={clearFilters}>
+                  Limpiar filtros
+                </Button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              {filteredProducts.map((product) => {
+                const cleanedUrl = cleanImageUrl(product.image);
+                const hasError = imageErrors.has(product.id);
+                const showImage = cleanedUrl && !hasError;
+
+                return (
+                  <Card
+                    key={product.id}
+                    className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg flex flex-col"
+                  >
+                    <div className="aspect-square relative bg-muted overflow-hidden">
+                      {showImage ? (
+                        <img
+                          src={cleanedUrl}
+                          alt={product.name}
+                          className="object-cover w-full h-full transition-transform hover:scale-105"
+                          onError={() => handleImageError(product.id)}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
+                          <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
+                          <span className="text-xs">Sin imagen</span>
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader className="p-3 sm:p-4 flex-shrink-0">
+                      <CardTitle className="text-sm sm:text-base line-clamp-1">
+                        {product.name}
+                      </CardTitle>
+                      {product.category_name && (
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 w-fit text-xs"
+                        >
+                          {product.category_name}
+                        </Badge>
+                      )}
+                    </CardHeader>
+                    <CardContent className="p-3 pt-0 flex-1">
+                      <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                        {product.description}
+                      </CardDescription>
+                    </CardContent>
+                    <CardFooter className="p-3 pt-0 flex justify-between items-center gap-2">
+                      <span className="text-lg sm:text-xl font-bold text-primary">
+                        {formatPrice(product.price)}
+                      </span>
+                      <Button size="sm" className="text-xs sm:text-sm">
+                        Ver
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

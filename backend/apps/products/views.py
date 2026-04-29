@@ -2,14 +2,33 @@ from .models import Product
 from .serializers import ProductSerializer
 from .permissions import IsAdminOrOwner
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
+    def get_permissions(self):
+        if self.action in ["list", "retrieve", "search"]:
+            return [AllowAny()]
+        return super().get_permissions()
+
     def get_queryset(self):
         if self.request.user.is_staff:
             return Product.objects.all()
-        return Product.objects.filter(seller=self.request.user)
+        if self.request.user.is_authenticated:
+            return Product.objects.all()
+        return Product.objects.all()
+
+    @action(detail=False, methods=["get"], url_path="search")
+    def search(self, request):
+        query = request.query_params.get("search", "")
+        if query:
+            products = Product.objects.filter(name__icontains=query)
+        else:
+            products = Product.objects.all()
+        serializer = self.get_serializer(products, many=True)
+        return Response(serializer.data)
