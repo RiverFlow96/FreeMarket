@@ -7,12 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingBag, ArrowLeft, Loader2 } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "@/components/ui/use-toast";
 
 interface Category {
   name: string;
+}
+
+interface PlanInfo {
+  plan: string;
+  product_limit: number;
+  product_count: number;
+  can_add_product: boolean;
 }
 
 export default function SellProduct() {
@@ -28,6 +35,8 @@ export default function SellProduct() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -35,10 +44,29 @@ export default function SellProduct() {
       return;
     }
 
-    fetch("/api/v1/categories/")
-      .then(res => res.json())
-      .then(data => setCategories(data.results || data))
-      .catch(console.error);
+    const fetchData = async () => {
+      setLoadingPlan(true);
+      try {
+        const [categoriesRes, planRes] = await Promise.all([
+          fetch("/api/v1/categories/"),
+          authFetch("/api/v1/products/my_plan/"),
+        ]);
+
+        const catsData = await categoriesRes.json();
+        setCategories(catsData.results || catsData);
+
+        if (planRes.ok) {
+          const planData = await planRes.json();
+          setPlanInfo(planData);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoadingPlan(false);
+      }
+    };
+
+    fetchData();
   }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,6 +173,16 @@ export default function SellProduct() {
     return null;
   }
 
+  if (loadingPlan) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const planName = planInfo?.plan === "plus" ? "Plus" : planInfo?.plan === "pro" ? "Pro" : "Gratis";
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
@@ -160,6 +198,30 @@ export default function SellProduct() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
+        {planInfo && !planInfo.can_add_product && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-amber-800">Límite de productos alcanzado</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Has alcanzado el límite de <strong>{planInfo.product_limit}</strong> productos de tu plan <strong>{planName}</strong>.
+                  <br />
+                  Para agregar más productos, cambia a un plan superior.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 border-amber-600 text-amber-700 hover:bg-amber-100"
+                  onClick={() => navigate("/profile")}
+                >
+                  Ver planes disponibles
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
@@ -168,7 +230,14 @@ export default function SellProduct() {
               </div>
               <div>
                 <CardTitle className="text-xl">Vender producto</CardTitle>
-                <CardDescription>Completa los datos de tu producto</CardDescription>
+                <CardDescription>
+                  Completa los datos de tu producto
+                  {planInfo && (
+                    <span className="ml-2 text-muted-foreground">
+                      ({planInfo.product_count}/{planInfo.product_limit} productos)
+                    </span>
+                  )}
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -246,7 +315,12 @@ export default function SellProduct() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading || (planInfo && !planInfo.can_add_product)}
+              >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShoppingBag className="w-4 h-4 mr-2" />}
                 {loading ? "Publicando..." : "Publicar producto"}
               </Button>

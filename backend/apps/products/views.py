@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import serializers
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -25,7 +26,19 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Product.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(seller=self.request.user)
+        user = self.request.user
+        if not user.can_add_product:
+            from django.utils.translation import gettext_lazy as _
+
+            raise serializers.ValidationError(
+                {
+                    "error": _(
+                        f"Has alcanzado el límite de {user.product_limit} productos. "
+                        f"Upgradea tu plan para agregar más productos."
+                    )
+                }
+            )
+        serializer.save(seller=user)
 
     @action(detail=False, methods=["get"], url_path="search")
     def search(self, request):
@@ -47,3 +60,15 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    def my_plan(self, request):
+        user = request.user
+        return Response(
+            {
+                "plan": user.plan,
+                "product_limit": user.product_limit,
+                "product_count": user.product_count,
+                "can_add_product": user.can_add_product,
+            }
+        )

@@ -13,6 +13,7 @@ from .serializers import (
     UserCreateSerializer,
     UserProfileSerializer,
     ChangePasswordSerializer,
+    UpdatePlanSerializer,
 )
 
 
@@ -31,6 +32,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             return [AllowAny()]
+        if self.action in ["profile", "change_password", "my_products", "update_plan"]:
+            return [IsAuthenticated()]
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -46,7 +49,6 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["get", "put", "patch"],
-        permission_classes=[IsAuthenticated],
     )
     def profile(self, request):
         user = request.user
@@ -66,7 +68,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(UserProfileSerializer(user).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["post"])
     def change_password(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
@@ -86,8 +88,35 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=["get"])
     def my_products(self, request):
         products = Product.objects.filter(seller=request.user)
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["get"])
+    def all_products(self, request):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "No tienes permiso para ver todos los productos."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"])
+    def update_plan(self, request):
+        serializer = UpdatePlanSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            user.plan = serializer.validated_data["plan"]
+            user.save()
+            return Response(
+                {
+                    "message": "Plan actualizado exitosamente.",
+                    "plan": user.plan,
+                    "product_limit": user.product_limit,
+                }
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

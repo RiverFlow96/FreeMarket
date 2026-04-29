@@ -23,7 +23,7 @@ export function Toaster() {
               )}
             </div>
             {action}
-            <ToastClose onClick={() => dismiss(id)} />
+            <ToastClose onClick={() => dismiss(id)} aria-label="Cerrar" />
           </Toast>
         )
       })}

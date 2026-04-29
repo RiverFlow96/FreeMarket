@@ -29,6 +29,7 @@ import {
   PanelLeftClose,
   LogOut,
   PlusCircle,
+  User,
 } from "lucide-react";
 
 interface Product {
@@ -249,6 +250,12 @@ export default function ProductsPage() {
             <div className="flex items-center gap-1 sm:gap-2">
               {isAuthenticated ? (
                 <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/profile">
+                      <User className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="hidden md:inline">Perfil</span>
+                    </Link>
+                  </Button>
                   <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                     <Link to="/sell">
                       <PlusCircle className="w-4 h-4 mr-1 sm:mr-2" />

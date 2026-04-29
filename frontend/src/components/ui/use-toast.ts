@@ -150,6 +150,10 @@ function toast({ ...props }: Toast) {
     },
   })
 
+  setTimeout(() => {
+    dispatch({ type: "DISMISS_TOAST", toastId: id })
+  }, TOAST_REMOVE_DELAY)
+
   return {
     id: id,
     dismiss,

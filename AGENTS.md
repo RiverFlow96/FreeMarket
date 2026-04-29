@@ -70,6 +70,32 @@ El formulario de registro (`Register.tsx`) incluye:
 - Ejecutar `python manage.py migrate` para agregar el campo `address` a la base de datos
 - El proxy de Vite reenvía `/api` a `localhost:8000`
 
+## Planes de usuario y límites de productos
+
+El modelo de usuario incluye un campo `plan` con tres opciones:
+
+- **free**: Límite de 3 productos (valor por defecto)
+- **plus**: Límite de 5 productos
+- **pro**: Límite de 10 productos
+
+### Endpoints relacionados
+
+- `GET /api/v1/products/my_plan/` - Devuelve el plan actual, límite, cantidad de productos y si puede agregar más
+- `POST /api/v1/users/update_plan/` - Actualiza el plan del usuario (requiere autenticación)
+
+### Campos adicionales en serializadores de usuario
+
+Los serializadores `UserSerializer` y `UserProfileSerializer` incluyen:
+
+- `plan`: Plan actual del usuario
+- `product_limit`: Límite de productos según el plan
+- `product_count`: Cantidad de productos publicados
+- `can_add_product`: Booleano que indica si puede agregar más productos
+
+### Validación en creación de productos
+
+Al intentar crear un producto, el backend valida si el usuario ha alcanzado su límite y devuelve un error 400 si corresponde.
+
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
 
 ---
