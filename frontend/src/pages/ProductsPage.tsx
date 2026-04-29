@@ -415,53 +415,55 @@ export default function ProductsPage() {
                 const showImage = cleanedUrl && !hasError;
 
                 return (
-                  <Card
+                  <Link
+                    to={`/products/${product.id}`}
                     key={product.id}
-                    className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg flex flex-col"
+                    className="block h-full"
                   >
-                    <div className="aspect-square relative bg-muted overflow-hidden">
-                      {showImage ? (
-                        <img
-                          src={cleanedUrl}
-                          alt={product.name}
-                          className="object-cover w-full h-full transition-transform hover:scale-105"
-                          onError={() => handleImageError(product.id)}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
-                          <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
-                          <span className="text-xs">Sin imagen</span>
+                    <Card className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group">
+                      <div className="aspect-square relative bg-muted overflow-hidden">
+                        {showImage ? (
+                          <img
+                            src={cleanedUrl}
+                            alt={product.name}
+                            className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                            onError={() => handleImageError(product.id)}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
+                            <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
+                            <span className="text-xs">Sin imagen</span>
+                          </div>
+                        )}
+                      </div>
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardTitle className="text-sm sm:text-base line-clamp-1">
+                          {product.name}
+                        </CardTitle>
+                        {product.category_name && (
+                          <Badge
+                            variant="secondary"
+                            className="mt-1 w-fit text-xs"
+                          >
+                            {product.category_name}
+                          </Badge>
+                        )}
+                      </CardHeader>
+                      <CardContent className="p-3 pt-0">
+                        <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                          {product.description}
+                        </CardDescription>
+                      </CardContent>
+                      <CardFooter className="p-3 pt-0">
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-lg sm:text-xl font-bold text-primary">
+                            {formatPrice(product.price)}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    <CardHeader className="p-3 sm:p-4 flex-shrink-0">
-                      <CardTitle className="text-sm sm:text-base line-clamp-1">
-                        {product.name}
-                      </CardTitle>
-                      {product.category_name && (
-                        <Badge
-                          variant="secondary"
-                          className="mt-1 w-fit text-xs"
-                        >
-                          {product.category_name}
-                        </Badge>
-                      )}
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 flex-1">
-                      <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                        {product.description}
-                      </CardDescription>
-                    </CardContent>
-                    <CardFooter className="p-3 pt-0 flex justify-between items-center gap-2">
-                      <span className="text-lg sm:text-xl font-bold text-primary">
-                        {formatPrice(product.price)}
-                      </span>
-                      <Button size="sm" className="text-xs sm:text-sm">
-                        Ver
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                      </CardFooter>
+                    </Card>
+                  </Link>
                 );
               })}
             </div>

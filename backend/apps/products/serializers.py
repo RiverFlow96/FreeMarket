@@ -4,6 +4,9 @@ from .models import Product
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
+    seller_name = serializers.CharField(source="seller.username", read_only=True)
+    seller_email = serializers.EmailField(source="seller.email", read_only=True)
+    seller_phone = serializers.IntegerField(source="seller.phone", read_only=True)
 
     class Meta:
         model = Product
@@ -15,6 +18,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "category",
             "category_name",
             "image",
+            "seller_name",
+            "seller_email",
+            "seller_phone",
         ]
 
 
