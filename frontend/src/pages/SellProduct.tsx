@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ShoppingBag, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "@/components/ui/use-toast";
+import { CURRENCY_LABELS, type Currency } from "@/utils/currency";
 
 interface Category {
   name: string;
@@ -29,6 +30,7 @@ export default function SellProduct() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [currency, setCurrency] = useState<Currency>("CUP");
   const [category, setCategory] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
@@ -84,6 +86,7 @@ export default function SellProduct() {
         formData.append("name", name);
         formData.append("description", description);
         formData.append("price", price);
+        formData.append("currency", currency);
         if (categoryId) formData.append("category", categoryId.toString());
         formData.append("image", imageFile);
 
@@ -99,6 +102,7 @@ export default function SellProduct() {
             name,
             description,
             price: parseFloat(price),
+            currency,
             category: categoryId,
             image_url: imageUrl || null,
           }),
@@ -272,9 +276,9 @@ export default function SellProduct() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="price" className="text-sm font-medium">Precio (CUP) *</label>
+                  <label htmlFor="price" className="text-sm font-medium">Precio *</label>
                   <Input
                     id="price"
                     type="number"
@@ -285,6 +289,22 @@ export default function SellProduct() {
                     onChange={(e) => setPrice(e.target.value)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="currency" className="text-sm font-medium">Moneda</label>
+                  <Select value={currency} onValueChange={(val) => setCurrency(val as Currency)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona moneda" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(CURRENCY_LABELS) as Currency[]).map((curr) => (
+                        <SelectItem key={curr} value={curr}>
+                          {CURRENCY_LABELS[curr]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

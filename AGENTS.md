@@ -96,6 +96,23 @@ Los serializadores `UserSerializer` y `UserProfileSerializer` incluyen:
 
 Al intentar crear un producto, el backend valida si el usuario ha alcanzado su límite y devuelve un error 400 si corresponde.
 
+## Monedas disponibles
+
+El modelo de producto incluye un campo `currency` con las siguientes opciones:
+
+- **CUP**: Peso Cubano (valor por defecto)
+- **MLC**: Peso Convertible
+- **USD**: Dólar Estadounidense
+- **EUR**: Euro
+
+### Implementación
+
+- **Backend**: Campo `currency` en el modelo `Product` con choices predefined
+- **Frontend**:
+  - Utility `formatPrice(price, currency)` en `frontend/src/utils/currency.ts`
+  - Constante `CURRENCY_LABELS` para mostrar opciones en formularios
+  - Selector de moneda en el formulario de venta (`SellProduct.tsx`)
+
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
 
 ---

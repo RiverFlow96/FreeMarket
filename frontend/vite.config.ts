@@ -16,7 +16,7 @@ export default defineConfig({
         target: "http://localhost:8000",
         changeOrigin: true,
       },
-      "/backend/media": {
+      "/media": {
         target: "http://localhost:8000",
         changeOrigin: true,
       },

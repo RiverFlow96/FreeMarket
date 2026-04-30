@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatPrice } from "@/utils/currency";
+import { formatPrice, type Currency } from "@/utils/currency";
 import { ContactSellerDialog } from "@/components/ContactSellerDialog";
 
 interface Product {
@@ -144,7 +144,7 @@ export default function ProductDetail() {
               )}
               <h1 className="text-2xl sm:text-3xl font-bold">{product.name}</h1>
               <p className="text-3xl sm:text-4xl font-bold text-primary mt-2">
-                {formatPrice(product.price)}
+                {formatPrice(product.price, (product.currency as Currency) || "CUP")}
               </p>
             </div>
 

@@ -267,7 +267,7 @@ export default function Profile() {
         });
         fetchPlanInfo();
       } else {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         toast({
           title: "Error",
           description: data.error || "No tienes permiso para eliminar este producto.",

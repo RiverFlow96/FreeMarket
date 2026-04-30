@@ -17,6 +17,7 @@ Thumbs.db
 
 # Django/Python specific files (if generated locally)
 /media/
+backend/media/products/
 /static/
 */*/migrations/*/__pycache__
 backend/apps/*/migrations/

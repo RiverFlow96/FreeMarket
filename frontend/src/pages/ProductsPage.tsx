@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
-import { formatPrice } from "@/utils/currency";
+import { formatPrice, getCurrencyIcon, type Currency } from "@/utils/currency";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  currency?: string;
   image?: string | null;
   category_name?: string;
   category?: number;
@@ -495,11 +496,14 @@ export default function ProductsPage() {
                             {product.description}
                           </CardDescription>
                         </div>
-                        <div className="flex items-center justify-between w-full mt-3">
-                          <span className="text-lg sm:text-xl font-bold text-primary">
-                            {formatPrice(product.price)}
-                          </span>
-                        </div>
+<div className="flex items-center justify-between w-full mt-3">
+                            <span className="text-lg sm:text-xl font-bold text-primary">
+                              <span className="text-sm mr-1">
+                                {getCurrencyIcon(product.currency as Currency)}
+                              </span>
+                              {product.price}
+                            </span>
+                          </div>
                       </div>
                     </Card>
                   </Link>

@@ -131,6 +131,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://sub.example.com",
     "http://localhost:8080",
     "http://127.0.0.1:9000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 # Optional Methods
@@ -160,7 +162,7 @@ SPECTACULAR_SETTINGS = {
     "REDOC_DIST": "SIDECAR",
 }
 
-MEDIA_URL = "backend/media/"
-MEDIA_ROOT = BASE_DIR / "backend" / "media"
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 AUTH_USER_MODEL = "users.User"
