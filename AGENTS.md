@@ -15,6 +15,104 @@ La página `/products` incluye filtros avanzados:
 - **Ordenamiento:** Por nombre (A-Z, Z-A) o precio (menor, mayor)
 - Los filtros se aplican en tiempo real en el frontend
 
+## Toast Notifications
+
+El proyecto usa un sistema de Toast personalizado basado en shadcn/ui:
+
+- **Archivos creados:**
+  - `frontend/src/components/ui/use-toast.ts` - Hook para mostrar toasts
+  - `frontend/src/components/ui/toast.tsx` - Componente Toast
+  - `frontend/src/components/ui/toaster.tsx` - Contenedor de toasts
+- **Uso en componentes:**
+
+  ```typescript
+  import { toast } from "@/components/ui/use-toast";
+
+  toast({
+    title: "Título",
+    description: "Descripción",
+    variant: "success" | "destructive" | "default",
+  });
+  ```
+
+- **Variantes disponibles:** default, destructive, success
+- El Toaster debe estar incluido en App.tsx: `<Toaster />`
+
+## Información del vendedor
+
+En los detalles del producto (`ProductDetail.tsx`) se muestra:
+
+- Nombre del vendedor
+- Email
+- Teléfono (si el vendedor lo agregó)
+- Dirección (si el vendedor la agregó)
+- Botones para enviar mensaje o llamar
+
+El modelo de usuario tiene campos:
+
+- `phone`: Número de teléfono (opcional)
+- `address`: Dirección (opcional)
+
+## Archivos media
+
+Las imágenes de productos se sirven desde `backend/media/`. En desarrollo, Django sirve estos archivos automáticamente.
+
+## Registro de usuarios
+
+El formulario de registro (`Register.tsx`) incluye:
+
+- Usuario, email, contraseña (requeridos)
+- Teléfono (opcional)
+- Dirección (opcional)
+
+## Notas de desarrollo
+
+- Ejecutar `python manage.py migrate` para agregar el campo `address` a la base de datos
+- El proxy de Vite reenvía `/api` a `localhost:8000`
+
+## Planes de usuario y límites de productos
+
+El modelo de usuario incluye un campo `plan` con tres opciones:
+
+- **free**: Límite de 3 productos (valor por defecto)
+- **plus**: Límite de 5 productos
+- **pro**: Límite de 10 productos
+
+### Endpoints relacionados
+
+- `GET /api/v1/products/my_plan/` - Devuelve el plan actual, límite, cantidad de productos y si puede agregar más
+- `POST /api/v1/users/update_plan/` - Actualiza el plan del usuario (requiere autenticación)
+
+### Campos adicionales en serializadores de usuario
+
+Los serializadores `UserSerializer` y `UserProfileSerializer` incluyen:
+
+- `plan`: Plan actual del usuario
+- `product_limit`: Límite de productos según el plan
+- `product_count`: Cantidad de productos publicados
+- `can_add_product`: Booleano que indica si puede agregar más productos
+
+### Validación en creación de productos
+
+Al intentar crear un producto, el backend valida si el usuario ha alcanzado su límite y devuelve un error 400 si corresponde.
+
+## Monedas disponibles
+
+El modelo de producto incluye un campo `currency` con las siguientes opciones:
+
+- **CUP**: Peso Cubano (valor por defecto)
+- **MLC**: Peso Convertible
+- **USD**: Dólar Estadounidense
+- **EUR**: Euro
+
+### Implementación
+
+- **Backend**: Campo `currency` en el modelo `Product` con choices predefined
+- **Frontend**:
+  - Utility `formatPrice(price, currency)` en `frontend/src/utils/currency.ts`
+  - Constante `CURRENCY_LABELS` para mostrar opciones en formularios
+  - Selector de moneda en el formulario de venta (`SellProduct.tsx`)
+
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
 
 ---
@@ -100,7 +198,8 @@ Ver [README.md](README.md) para un diagrama y detalles de la estructura.
 - Fortalecer permisos para que solo el dueño pueda modificar/eliminar sus productos.
 - Agregar validaciones personalizadas en los serializadores.
 - Implementar mensajería interna, sistema de reportes y favoritos.
-- Mantener la documentación de la API actualizada.
+- Mantener la documentación de la API actualizada
+- Agregar errores al archivo ERRORS_AND_AGENTS.md (no commitear).
 - Ver más en [TODO.md](TODO.md).
 
 ---

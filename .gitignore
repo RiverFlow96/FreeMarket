@@ -17,6 +17,7 @@ Thumbs.db
 
 # Django/Python specific files (if generated locally)
 /media/
+backend/media/products/
 /static/
 */*/migrations/*/__pycache__
 backend/apps/*/migrations/
@@ -30,5 +31,7 @@ backend/apps/*/migrations/
 # AI Configurations
 .continue/
 AGENTS.md
-
+ERRORS_AND_AGENTS.md
 TODO.md
+
+localhost.har

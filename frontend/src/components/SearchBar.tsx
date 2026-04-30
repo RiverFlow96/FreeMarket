@@ -20,12 +20,11 @@ export function SearchBar() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Buscar productos, categorías..."
-        className="flex-1 px-5 py-3 rounded-full border-2 border-blue-400 focus:border-blue-600 focus:outline-none bg-white shadow transition-all duration-200 text-lg"
-        autoFocus
+        className="flex-1 px-5 py-3 rounded-full border-2 border-input bg-background text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 text-lg"
       />
       <button
         type="submit"
-        className="ml-2 px-5 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition-all duration-200"
+        className="ml-2 px-5 py-3 rounded-full bg-primary text-primary-foreground hover:bg-primary/80 font-semibold transition-colors"
         aria-label="Buscar"
       >
         <svg

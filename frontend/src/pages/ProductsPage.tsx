@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
+import { formatPrice, getCurrencyIcon, type Currency } from "@/utils/currency";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -27,6 +27,9 @@ import {
   ShoppingBag,
   Menu,
   PanelLeftClose,
+  LogOut,
+  PlusCircle,
+  User,
 } from "lucide-react";
 
 interface Product {
@@ -34,6 +37,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  currency?: string;
   image?: string | null;
   category_name?: string;
   category?: number;
@@ -48,26 +52,26 @@ type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
 function cleanImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
-    if (url.includes("/backend/media/")) {
-      const match = url.match(/\/backend\/media\/(.+)/);
-      if (match) {
-        let extractedUrl = decodeURIComponent(match[1]);
-        extractedUrl = extractedUrl
-          .replace(/^http:\/+/, "https://")
-          .replace(/^https:\/+/, "https://");
-        if (
-          extractedUrl.startsWith("http://") ||
-          extractedUrl.startsWith("https://")
-        ) {
-          return extractedUrl;
-        }
-      }
-    }
     const decoded = decodeURIComponent(url);
+
     if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
       return decoded;
     }
-    return null;
+
+    if (decoded.startsWith("/backend/media/")) {
+      return decoded;
+    }
+
+    if (decoded.startsWith("/media/")) {
+      return decoded;
+    }
+
+    if (decoded.includes("/media/")) {
+      const match = decoded.match(/(\/media\/.+)/);
+      if (match) return match[1];
+    }
+
+    return decoded;
   } catch {
     return null;
   }
@@ -211,13 +215,6 @@ export default function ProductsPage() {
     fetchProducts("");
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(price);
-  };
-
   const activeFiltersCount = () => {
     let count = 0;
     if (query) count++;
@@ -226,36 +223,79 @@ export default function ProductsPage() {
     return count;
   };
 
+  const { isAuthenticated, logout, user } = useAuthStore();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSidebar(!showSidebar)}
-                className="lg:hidden"
+                className="text-muted-foreground hover:text-foreground"
+                title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
-                {showSidebar ? <PanelLeftClose /> : <Menu />}
+                <Menu className="w-5 h-5" />
               </Button>
               <Link
                 to="/"
-                className="text-xl sm:text-2xl font-bold text-primary flex items-center gap-2"
+                className="text-lg sm:text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity"
               >
-                <ShoppingBag className="w-6 h-6" />
-                FreeMarket
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="hidden sm:inline">FreeMarket</span>
               </Link>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSidebar(!showSidebar)}
-              className="hidden lg:flex"
-            >
-              {showSidebar ? <PanelLeftClose /> : <Menu />}
-            </Button>
+            <div className="flex items-center gap-1 sm:gap-2">
+              {isAuthenticated ? (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/profile">
+                      <User className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="hidden md:inline">Perfil</span>
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                    <Link to="/sell">
+                      <PlusCircle className="w-4 h-4 mr-1 sm:mr-2" />
+                      <span className="hidden md:inline">Vender</span>
+                    </Link>
+                  </Button>
+                  <span className="text-sm text-muted-foreground hidden lg:inline">
+                    {user?.username}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={logout}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Cerrar sesión"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link to="/register">Registrarse</Link>
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="lg:hidden text-muted-foreground hover:text-foreground"
+                title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
+              >
+                {showSidebar ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -420,8 +460,8 @@ export default function ProductsPage() {
                     key={product.id}
                     className="block h-full"
                   >
-                    <Card className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group">
-                      <div className="aspect-square relative bg-muted overflow-hidden">
+                    <Card className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group flex flex-col">
+                      <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
                         {showImage ? (
                           <img
                             src={cleanedUrl}
@@ -437,31 +477,34 @@ export default function ProductsPage() {
                           </div>
                         )}
                       </div>
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-sm sm:text-base line-clamp-1">
-                          {product.name}
-                        </CardTitle>
-                        {product.category_name && (
-                          <Badge
-                            variant="secondary"
-                            className="mt-1 w-fit text-xs"
-                          >
-                            {product.category_name}
-                          </Badge>
-                        )}
-                      </CardHeader>
-                      <CardContent className="p-3 pt-0">
-                        <CardDescription className="text-xs sm:text-sm line-clamp-2">
-                          {product.description}
-                        </CardDescription>
-                      </CardContent>
-                      <CardFooter className="p-3 pt-0">
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-lg sm:text-xl font-bold text-primary">
-                            {formatPrice(product.price)}
-                          </span>
+                      <div className="flex flex-col flex-1 p-3 sm:p-4 pt-0">
+                        <CardHeader className="p-0 mb-2">
+                          <CardTitle className="text-sm sm:text-base line-clamp-1">
+                            {product.name}
+                          </CardTitle>
+                          {product.category_name && (
+                            <Badge
+                              variant="secondary"
+                              className="mt-1 w-fit text-xs"
+                            >
+                              {product.category_name}
+                            </Badge>
+                          )}
+                        </CardHeader>
+                        <div className="flex-1">
+                          <CardDescription className="text-xs sm:text-sm line-clamp-2">
+                            {product.description}
+                          </CardDescription>
                         </div>
-                      </CardFooter>
+<div className="flex items-center justify-between w-full mt-3">
+                            <span className="text-lg sm:text-xl font-bold text-primary">
+                              <span className="text-sm mr-1">
+                                {getCurrencyIcon(product.currency as Currency)}
+                              </span>
+                              {product.price}
+                            </span>
+                          </div>
+                      </div>
                     </Card>
                   </Link>
                 );

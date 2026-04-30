@@ -1,12 +1,46 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
 import { ShoppingBag, Package, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/authStore";
 
 export function Home() {
+  const { isAuthenticated, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen w-full">
-      <section className="relative min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100/50 overflow-hidden">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <ShoppingBag className="w-6 h-6 text-primary" />
+            <span className="font-bold text-lg">FreeMarket</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            {!isAuthenticated ? (
+              <Button asChild>
+                <Link to="/login">Iniciar Sesión</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/profile">Mi Perfil</Link>
+                </Button>
+                <Button variant="secondary" onClick={handleLogout}>
+                  Cerrar Sesión
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <section className="relative min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100/50 overflow-hidden pt-16">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.1),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(59,130,246,0.08),transparent_40%)]" />
 
@@ -33,9 +67,15 @@ export function Home() {
             <Button variant="outline" asChild>
               <Link to="/products">Explorar productos</Link>
             </Button>
-            <Button asChild>
-              <Link to="/products">Empezar a vender</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild>
+                <Link to="/sell">Vender producto</Link>
+              </Button>
+            ) : (
+              <Button asChild>
+                <Link to="/register">Regístrate para vender</Link>
+              </Button>
+            )}
           </div>
         </div>
 
