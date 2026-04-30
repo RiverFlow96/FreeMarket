@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getFavorites, removeFavorite } from "@/utils/favorites";
 import { getCurrencyIcon, type Currency } from "@/utils/currency";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -11,6 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface Product {
   id: number;
@@ -124,22 +125,18 @@ export default function Favorites() {
           </div>
         )}
 
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-4 rounded-lg text-center">
-            {error}
-          </div>
-        )}
+        {error && <ErrorState message={error} onRetry={() => loadFavoriteProducts().then(d => {setProducts(d); setLoading(false)}).catch(() => {setError("Error al cargar los favoritos"); setLoading(false)})} />}
 
         {!loading && products.length === 0 && (
-          <div className="text-center py-12">
-            <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground text-lg mb-4">
-              No tienes productos en favoritos
-            </p>
-            <Button asChild>
-              <Link to="/products">Explorar productos</Link>
-            </Button>
-          </div>
+          <EmptyState
+            icon={Heart}
+            title="Aún no tienes productos guardados"
+            description="Guarda productos que te interesen para verlos aquí"
+            action={{
+              label: "Explorar productos",
+              onClick: () => window.location.href = "/products",
+            }}
+          />
         )}
 
         {!loading && products.length > 0 && (

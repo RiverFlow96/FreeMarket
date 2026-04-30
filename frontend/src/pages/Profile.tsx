@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import toast from "react-hot-toast";
-import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star } from "lucide-react";
+import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star, Package } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface Product {
   id: number;
@@ -30,7 +31,6 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(false);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -91,17 +91,26 @@ export default function Profile() {
       }
       setLoading(true);
       try {
-        const res = await fetch("/api/v1/users/profile/", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
+        const [profileRes, productsRes] = await Promise.all([
+          fetch("/api/v1/users/profile/", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+          fetch("/api/v1/users/my_products/", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }),
+        ]);
+
+        if (profileRes.ok) {
+          const data = await profileRes.json();
           setUsername(data.username || "");
           setEmail(data.email || "");
           setPhone(data.phone != null ? String(data.phone) : "");
           setAddress(data.address || "");
-        } else {
-          console.error("Profile error:", await res.json());
+        }
+
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          setProducts(productsData);
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -111,23 +120,6 @@ export default function Profile() {
     };
     fetchProfile();
   }, [accessToken, mounted]);
-
-  const fetchMyProducts = async () => {
-    setLoadingProducts(true);
-    try {
-      const res = await fetch("/api/v1/users/my_products/", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProducts(data);
-      }
-    } catch (err) {
-      console.error("Error fetching products:", err);
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
 
   const saveField = async (field: string, value: string) => {
     setSaving(true);
@@ -228,10 +220,18 @@ export default function Profile() {
       return;
     }
 
+    if (!accessToken) {
+      toast.error("No tienes sesión activa. Por favor, inicia sesión novamente.");
+      return;
+    }
+
     try {
       const res = await fetch(`/api/v1/products/${productId}/delete_product/`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (res.ok) {
@@ -239,7 +239,8 @@ export default function Profile() {
         toast.success("El producto ha sido eliminado exitosamente.");
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || "No tienes permiso para eliminar este producto.");
+        console.error("Delete product error:", res.status, data);
+        toast.error(data.error || `Error al eliminar producto (${res.status})`);
       }
     } catch {
       toast.error("Ocurrió un error al eliminar el producto.");
@@ -544,9 +545,14 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="max-h-64 overflow-y-auto">
               {products.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No tienes productos publicados. Usa el botón de abajo para cargar tus productos.
-                </p>
+                <EmptyState
+                  icon={Package}
+                  title="No has publicado productos aún"
+                  action={{
+                    label: "Publicar mi primer producto",
+                    onClick: () => navigate("/sell"),
+                  }}
+                />
               ) : (
                 <div className="space-y-2">
                   {products.map((product) => (
@@ -583,12 +589,6 @@ export default function Profile() {
                 </div>
               )}
             </CardContent>
-            <CardFooter>
-              <Button variant="outline" onClick={fetchMyProducts} disabled={loadingProducts}>
-                {loadingProducts ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                {loadingProducts ? "Cargando..." : "Ver mis productos"}
-              </Button>
-            </CardFooter>
           </Card>
         </div>
       </div>

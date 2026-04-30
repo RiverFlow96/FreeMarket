@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { SkeletonProductDetail } from "@/components/ui/SkeletonProductDetail";
 import { ContactSellerDialog } from "@/components/ContactSellerDialog";
 import { ReportModal } from "@/components/ReportModal";
 import { useAuthStore } from "@/store/authStore";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 interface Product {
   id: number;
@@ -69,24 +70,29 @@ export default function ProductDetail() {
   const [showReportModal, setShowReportModal] = useState(false);
   const { isAuthenticated } = useAuthStore();
 
-  useEffect(() => {
+  const retryRef = useCallback(() => {
     if (!id) return;
-
-    const fetchProduct = async () => {
-      try {
-        const res = await fetch(`/api/v1/products/${id}/`);
+    setLoading(true);
+    setError("");
+    fetch(`/api/v1/products/${id}/`)
+      .then((res) => {
         if (!res.ok) throw new Error("Error al obtener producto");
-        const data = await res.json();
+        return res.json();
+      })
+      .then((data) => {
         setProduct(data);
         setLoading(false);
-      } catch {
+      })
+      .catch(() => {
         setError("No se pudo cargar el producto.");
         setLoading(false);
-      }
-    };
-
-    fetchProduct();
+      });
   }, [id]);
+
+  useEffect(() => {
+    const timer = setTimeout(retryRef, 0);
+    return () => clearTimeout(timer);
+  }, [retryRef]);
 
   if (loading) {
     return (
@@ -98,11 +104,22 @@ export default function ProductDetail() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <p className="text-destructive">{error || "Producto no encontrado"}</p>
-        <Button asChild variant="outline">
-          <Link to="/products">Volver a productos</Link>
-        </Button>
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+          <div className="container mx-auto px-4 py-4">
+            <Link
+              to="/products"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Volver a productos
+            </Link>
+          </div>
+        </header>
+        <ErrorState
+          message={error || "Producto no encontrado"}
+          onRetry={retryRef}
+        />
       </div>
     );
   }

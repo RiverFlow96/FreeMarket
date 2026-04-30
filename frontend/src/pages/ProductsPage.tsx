@@ -23,6 +23,8 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { SkeletonList } from "@/components/ui/SkeletonList";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import {
   Filter,
   X,
@@ -33,6 +35,7 @@ import {
   LogOut,
   PlusCircle,
   User,
+  Package,
 } from "lucide-react";
 
 interface Product {
@@ -450,21 +453,35 @@ export default function ProductsPage() {
 
             {loading && <SkeletonList count={8} />}
 
-            {error && (
-              <div className="bg-destructive/10 text-destructive p-4 rounded-lg text-center">
-                {error}
-              </div>
-            )}
+            {error && <ErrorState message={error} onRetry={() => fetchProducts(query)} />}
 
             {!loading && !error && filteredProducts.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg mb-4">
-                  No se encontraron productos con los filtros aplicados.
-                </p>
-                <Button variant="link" onClick={clearFilters}>
-                  Limpiar filtros
-                </Button>
-              </div>
+              query ? (
+                <EmptyState
+                  icon={Search}
+                  title={`No encontramos productos para "${query}"`}
+                  description="Intenta con otros términos o verifica la ortografía"
+                  action={{
+                    label: "Limpiar búsqueda",
+                    onClick: clearFilters,
+                  }}
+                />
+              ) : products.length === 0 ? (
+                <EmptyState
+                  icon={Package}
+                  title="No hay productos disponibles"
+                />
+              ) : (
+                <EmptyState
+                  icon={Search}
+                  title="No hay resultados"
+                  description="No se encontraron productos con los filtros aplicados"
+                  action={{
+                    label: "Limpiar filtros",
+                    onClick: clearFilters,
+                  }}
+                />
+              )
             )}
 
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
