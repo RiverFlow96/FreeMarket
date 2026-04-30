@@ -53,7 +53,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
     def delete_product(self, request, pk=None):
         product = self.get_object()
-        if product.seller != request.user and not request.user.is_staff:
+        if product.seller_id != request.user.id and not request.user.is_staff:
             return Response(
                 {"error": "No tienes permiso para eliminar este producto."},
                 status=status.HTTP_403_FORBIDDEN,
