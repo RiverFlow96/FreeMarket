@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
+import { SkeletonList } from "@/components/ui/SkeletonList";
 import {
   Filter,
   X,
@@ -447,11 +448,7 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {loading && (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
-            )}
+            {loading && <SkeletonList count={8} />}
 
             {error && (
               <div className="bg-destructive/10 text-destructive p-4 rounded-lg text-center">

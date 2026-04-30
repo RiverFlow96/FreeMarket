@@ -1,16 +1,77 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
 import { ShoppingBag, Package, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SkeletonList } from "@/components/ui/SkeletonList";
 import { useAuthStore } from "@/store/authStore";
+import { getCurrencyIcon, type Currency } from "@/utils/currency";
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  currency?: string;
+  image?: string | null;
+}
+
+function cleanImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const decoded = decodeURIComponent(url);
+    if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
+      return decoded;
+    }
+    if (decoded.startsWith("/backend/media/")) {
+      return decoded;
+    }
+    if (decoded.startsWith("/media/")) {
+      return decoded;
+    }
+    if (decoded.includes("/media/")) {
+      const match = decoded.match(/(\/media\/.+)/);
+      if (match) return match[1];
+    }
+    return decoded;
+  } catch {
+    return null;
+  }
+}
 
 export function Home() {
   const { isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  useEffect(() => {
+    const fetchRecentProducts = async () => {
+      try {
+        const res = await fetch("/api/v1/products/");
+        if (res.ok) {
+          const data = await res.json();
+          const productsList = Array.isArray(data) ? data : data.results || data;
+          setRecentProducts(productsList.slice(0, 8));
+        }
+      } catch (err) {
+        console.error("Error fetching recent products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecentProducts();
+  }, []);
+
+  const handleImageError = (productId: number) => {
+    setImageErrors((prev) => new Set(prev).add(productId));
   };
 
   return (
@@ -85,6 +146,65 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {!loading && recentProducts.length > 0 && (
+        <section className="py-16 sm:py-24 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold">
+                Productos recientes
+              </h2>
+              <Button variant="link" asChild>
+                <Link to="/products">Ver todos</Link>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              {recentProducts.map((product) => {
+                const cleanedUrl = cleanImageUrl(product.image);
+                const hasError = imageErrors.has(product.id);
+                const showImage = cleanedUrl && !hasError;
+                return (
+                  <Link to={`/products/${product.id}`} key={product.id} className="block h-full">
+                    <Card className="overflow-hidden transition-all hover:shadow-md h-full group flex flex-col">
+                      <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
+                        {showImage ? (
+                          <img src={cleanedUrl} alt={product.name} className="object-cover w-full h-full transition-transform group-hover:scale-105" onError={() => handleImageError(product.id)} loading="lazy" />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
+                            <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
+                            <span className="text-xs">Sin imagen</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col flex-1 p-3 sm:p-4 pt-0">
+                        <CardHeader className="p-0 mb-2">
+                          <CardTitle className="text-sm sm:text-base line-clamp-1">{product.name}</CardTitle>
+                        </CardHeader>
+                        <CardDescription className="text-xs sm:text-sm line-clamp-2">{product.description}</CardDescription>
+                        <div className="mt-3">
+                          <span className="text-lg sm:text-xl font-bold text-primary">
+                            <span className="text-sm mr-1">{getCurrencyIcon(product.currency as Currency)}</span>
+                            {product.price}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {loading && (
+        <section className="py-16 sm:py-24 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Productos recientes</h2>
+            <SkeletonList count={8} />
+          </div>
+        </section>
+      )}
 
       <section className="py-16 sm:py-24 bg-white">
         <div className="container mx-auto px-4">
