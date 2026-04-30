@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingBag, ArrowLeft, Mail, Phone, User, MapPin, Send } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Mail, Phone, User, MapPin, Send, Flag } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/card";
 import { formatPrice, type Currency } from "@/utils/currency";
 import { ContactSellerDialog } from "@/components/ContactSellerDialog";
+import { ReportModal } from "@/components/ReportModal";
+import { useAuthStore } from "@/store/authStore";
 
 interface Product {
   id: number;
@@ -63,6 +65,8 @@ export default function ProductDetail() {
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState(false);
   const [showContactDialog, setShowContactDialog] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (!id) return;
@@ -230,7 +234,7 @@ export default function ProductDetail() {
                   </p>
                 )}
               </CardContent>
-              <CardFooter className="flex gap-2">
+              <CardFooter className="flex gap-2 flex-wrap">
                 {(product.seller_email || product.seller_phone) && (
                   <Button
                     className="flex-1"
@@ -238,6 +242,16 @@ export default function ProductDetail() {
                   >
                     <Send className="w-4 h-4 mr-2" />
                     Contactar vendedor
+                  </Button>
+                )}
+                {isAuthenticated && (
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowReportModal(true)}
+                  >
+                    <Flag className="w-4 h-4 mr-2" />
+                    Reportar
                   </Button>
                 )}
               </CardFooter>
@@ -252,6 +266,13 @@ export default function ProductDetail() {
         sellerName={product.seller_name || "Vendedor"}
         sellerEmail={product.seller_email}
         sellerPhone={product.seller_phone}
+        productName={product.name}
+      />
+
+      <ReportModal
+        open={showReportModal}
+        onOpenChange={setShowReportModal}
+        productId={product.id}
         productName={product.name}
       />
     </div>

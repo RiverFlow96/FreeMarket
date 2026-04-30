@@ -113,6 +113,32 @@ El modelo de producto incluye un campo `currency` con las siguientes opciones:
   - Constante `CURRENCY_LABELS` para mostrar opciones en formularios
   - Selector de moneda en el formulario de venta (`SellProduct.tsx`)
 
+## Formulario de venta (Multi-Step)
+
+El formulario de venta (`SellProduct.tsx`) está implementado como un formulario de 4 pasos:
+
+### Estructura de componentes
+
+- `frontend/src/components/sell/MultiStepForm.tsx` - Componente principal que maneja el estado global del formulario
+- `frontend/src/components/sell/StepBasicInfo.tsx` - Paso 1: Nombre, descripción, categoría
+- `frontend/src/components/sell/StepPrice.tsx` - Paso 2: Precio, moneda, precio negociable
+- `frontend/src/components/sell/StepImages.tsx` - Paso 3: Subida de imágenes (máx 5, formatos: jpg, png, webp)
+- `frontend/src/components/sell/StepReview.tsx` - Paso 4: Revisión y términos
+
+### Características
+
+- Validación por paso antes de avanzar
+- Persistencia de datos entre pasos
+- Navegación con indicadores visuales (1, 2, 3, 4)
+- Uso de FormData para envío de imágenes múltiples
+- Toast de éxito/error después de crear el producto
+- Redirección a página del producto después de crear
+
+### API
+
+- POST `/api/v1/products/` con `Content-Type: multipart/form-data`
+- Body: name, description, category, price, currency, negotiable, images[]
+
 # AI Coding Agent Instructions for FreeMarket (Ecommerce)
 
 ---

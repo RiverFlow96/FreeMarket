@@ -25,6 +25,7 @@ from drf_spectacular.views import SpectacularSwaggerView, SpectacularAPIView
 from apps.users.views import UserViewSet
 from apps.products.views import ProductViewSet
 from apps.categories.views import CategoryViewSet
+from apps.reports.views import ReportViewSet
 
 # Import rest_framework library for make urls with routers function
 from rest_framework import routers
@@ -43,6 +44,7 @@ router.register(r"users", UserViewSet, "users")
 router.register(r"products", ProductViewSet, "products")
 # router.register(r"products-groups", ProductsGroupViewSet, "products-group")
 router.register(r"categories", CategoryViewSet, "categories")
+router.register(r"reports", ReportViewSet, "reports")
 
 urlpatterns = [
     # Admin Panel Url

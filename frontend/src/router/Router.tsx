@@ -6,10 +6,12 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import SellProduct from "../pages/SellProduct";
 import Profile from "../pages/Profile";
+import Favorites from "../pages/Favorites";
+import MyReports from "../pages/MyReports";
 import { useAuthStore } from "../store/authStore";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, LogOut, PlusCircle } from "lucide-react";
+import { ShoppingBag, LogOut, PlusCircle, Heart, Flag } from "lucide-react";
 
 function Navbar() {
   const { isAuthenticated, logout, user } = useAuthStore();
@@ -22,31 +24,47 @@ function Navbar() {
           FreeMarket
         </Link>
 
-        {isAuthenticated ? (
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/sell">
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Vender
-              </Link>
-            </Button>
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {user?.username}
-            </span>
-            <Button variant="ghost" size="sm" onClick={logout}>
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login">Iniciar sesión</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link to="/register">Registrarse</Link>
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+<Button variant="ghost" size="sm" asChild>
+                <Link to="/favorites">
+                  <Heart className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Favoritos</span>
+                </Link>
+              </Button>
+              {isAuthenticated && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/my-reports">
+                    <Flag className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Reportes</span>
+                  </Link>
+                </Button>
+              )}
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/sell">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Vender
+                </Link>
+              </Button>
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {user?.username}
+              </span>
+              <Button variant="ghost" size="sm" onClick={logout}>
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/login">Iniciar sesión</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/register">Registrarse</Link>
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
@@ -76,6 +94,8 @@ export default function Router() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Layout><Profile /></Layout>} />
 
+          <Route path="/favorites" element={<Layout><Favorites /></Layout>} />
+          <Route path="/my-reports" element={<Layout><MyReports /></Layout>} />
           <Route path="/sell" element={<Layout><SellProduct /></Layout>} />
         </Routes>
       </BrowserRouter>
