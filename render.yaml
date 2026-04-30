@@ -5,12 +5,8 @@ services:
     plan: free
     runtime: python
     buildCommand: pip install -r backend/requirements.txt
-    buildFilter:
-      include:
-        - backend/**
-        - "!**/*.sqlite3"
     startCommand: cd backend && gunicorn --bind 0.0.0.0:8000 config.wsgi:application
-    healthCheckPath: /api/v1/products/
+    healthCheckPath: /admin/login/
     envVars:
       - key: DEBUG
         value: "False"
