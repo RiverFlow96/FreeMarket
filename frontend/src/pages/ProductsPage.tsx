@@ -30,12 +30,10 @@ import {
   X,
   Search,
   ShoppingBag,
-  Menu,
-  PanelLeftClose,
-  LogOut,
-  PlusCircle,
-  User,
   Package,
+  PanelLeftClose,
+  PanelLeft,
+  User,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -124,7 +122,7 @@ function FilterContent({
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Todas las categorías" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             <SelectItem value="all">Todas</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.name} value={cat.name}>
@@ -164,7 +162,7 @@ function FilterContent({
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
             <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
             <SelectItem value="price-asc">Precio (menor)</SelectItem>
@@ -430,22 +428,26 @@ export default function ProductsPage() {
     return count;
   };
 
-  const { isAuthenticated, logout, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-3">
+      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur py-3">
+        <div className="container mx-auto px-4">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="text-muted-foreground hover:text-foreground hidden lg:flex"
+                className="hidden lg:flex"
                 title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
-                <Menu className="w-5 h-5" />
+                {showSidebar ? (
+                  <PanelLeftClose className="w-5 h-5" />
+                ) : (
+                  <PanelLeft className="w-5 h-5" />
+                )}
               </Button>
               <Button
                 variant="outline"
@@ -456,76 +458,32 @@ export default function ProductsPage() {
                 <Filter className="w-4 h-4" />
                 Filtros
                 {activeFiltersCount() > 0 && (
-                  <Badge
-                    variant="default"
-                    className="h-5 w-5 p-0 flex items-center justify-center text-xs"
-                  >
+                  <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
                     {activeFiltersCount()}
                   </Badge>
                 )}
               </Button>
-              <Link
-                to="/"
-                className="text-lg sm:text-xl font-bold text-primary flex items-center gap-2 hover:opacity-90 transition-opacity"
-              >
-                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="hidden sm:inline">FreeMarket</span>
-              </Link>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              {isAuthenticated ? (
-                <>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/profile">
-                      <User className="w-4 h-4 mr-1 sm:mr-2" />
-                      <span className="hidden md:inline">Perfil</span>
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    asChild
-                    className="hidden sm:flex"
-                  >
-                    <Link to="/sell">
-                      <PlusCircle className="w-4 h-4 mr-1 sm:mr-2" />
-                      <span className="hidden md:inline">Vender</span>
-                    </Link>
-                  </Button>
-                  <span className="text-sm text-muted-foreground hidden lg:inline">
-                    {user?.username}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={logout}
-                    className="text-muted-foreground hover:text-destructive"
-                    title="Cerrar sesión"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to="/login">Login</Link>
-                  </Button>
-                  <Button size="sm" asChild>
-                    <Link to="/register">Registrarse</Link>
-                  </Button>
-                </>
+            <div className="flex items-center gap-2">
+              {isAuthenticated && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/profile">
+                    <User className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Perfil</span>
+                  </Link>
+                </Button>
               )}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="lg:hidden text-muted-foreground hover:text-foreground"
+                className="lg:hidden"
                 title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
                 {showSidebar ? (
                   <PanelLeftClose className="w-5 h-5" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <PanelLeft className="w-5 h-5" />
                 )}
               </Button>
             </div>

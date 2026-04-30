@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Home } from "../pages/Home";
 import ProductsPage from "../pages/ProductsPage";
 import ProductDetail from "../pages/ProductDetail";
@@ -12,7 +12,7 @@ import MyReports from "../pages/MyReports";
 import { useAuthStore } from "../store/authStore";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, LogOut, PlusCircle, Heart, Flag, Menu, X } from "lucide-react";
+import { ShoppingBag, LogOut, PlusCircle, Heart, Flag, Menu, X, User, ChevronDown } from "lucide-react";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -24,7 +24,7 @@ interface NavLinkProps {
 
 function NavLink({ to, children, onClick }: NavLinkProps) {
   return (
-    <Link to={to} onClick={onClick}>
+    <Link to={to} onClick={onClick} className="flex items-center gap-2">
       {children}
     </Link>
   );
@@ -33,54 +33,111 @@ function NavLink({ to, children, onClick }: NavLinkProps) {
 function Navbar() {
   const { isAuthenticated, logout, user } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <nav className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-bold text-lg">
-          <ShoppingBag className="w-5 h-5 text-primary" />
-          <span className="hidden sm:inline">FreeMarket</span>
+    <nav className="border-b bg-gradient-to-r from-background to-muted/30 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+      <div className="container mx-auto px-4 py-2.5 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight group">
+          <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+            <ShoppingBag className="w-5 h-5" />
+          </div>
+          <span className="hidden sm:inline bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            FreeMarket
+          </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-1">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" asChild>
+
+          <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50">
             <Link to="/favorites">
-              <Heart className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Favoritos</span>
+              <Heart className="w-4 h-4 mr-1.5 text-rose-500" />
+              <span className="hidden lg:inline">Favoritos</span>
             </Link>
           </Button>
+
           {isAuthenticated && (
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50">
               <Link to="/my-reports">
-                <Flag className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Reportes</span>
+                <Flag className="w-4 h-4 mr-1.5 text-amber-500" />
+                <span className="hidden lg:inline">Reportes</span>
               </Link>
             </Button>
           )}
+
           {isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" asChild>
+            <div className="flex items-center gap-2 ml-2">
+              <Button
+                variant="default"
+                size="sm"
+                asChild
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm"
+              >
                 <Link to="/sell">
-                  <PlusCircle className="w-4 h-4 mr-2" />
+                  <PlusCircle className="w-4 h-4 mr-1.5" />
                   Vender
                 </Link>
               </Button>
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {user?.username}
-              </span>
-              <Button variant="ghost" size="sm" onClick={logout}>
-                <LogOut className="w-4 h-4" />
-              </Button>
+
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-muted/60 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium hidden lg:inline">
+                    {user?.username}
+                  </span>
+                  <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-lg border bg-background shadow-lg animate-in fade-in zoom-in-95 duration-150">
+                    <div className="p-2 border-b">
+                      <p className="text-sm font-medium">{user?.username}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                    <div className="p-1.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={logout}
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Cerrar sesión
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
+            <div className="flex items-center gap-2 ml-4">
+              <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50">
                 <Link to="/login">Iniciar sesión</Link>
               </Button>
-              <Button size="sm" asChild>
+              <Button
+                size="sm"
+                asChild
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm"
+              >
                 <Link to="/register">Registrarse</Link>
               </Button>
             </div>
@@ -94,6 +151,7 @@ function Navbar() {
             size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            className="hover:bg-muted/60"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
@@ -101,46 +159,72 @@ function Navbar() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-background animate-fade-in-up">
-          <div className="container mx-auto px-4 py-4 flex flex-col gap-3">
-            <Button variant="ghost" size="sm" asChild className="justify-start">
-              <NavLink to="/favorites" onClick={closeMobileMenu}>
-                <Heart className="w-4 h-4 mr-2" />
+        <div className="md:hidden border-t bg-background/98 backdrop-blur animate-in slide-in-from-top-2 duration-200">
+          <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
+            <Button variant="ghost" size="sm" asChild className="justify-start hover:bg-muted/50" onClick={closeMobileMenu}>
+              <NavLink to="/favorites">
+                <Heart className="w-4 h-4 mr-2 text-rose-500" />
                 Favoritos
               </NavLink>
             </Button>
+
             {isAuthenticated && (
-              <Button variant="ghost" size="sm" asChild className="justify-start">
-                <NavLink to="/my-reports" onClick={closeMobileMenu}>
-                  <Flag className="w-4 h-4 mr-2" />
+              <Button variant="ghost" size="sm" asChild className="justify-start hover:bg-muted/50" onClick={closeMobileMenu}>
+                <NavLink to="/my-reports">
+                  <Flag className="w-4 h-4 mr-2 text-amber-500" />
                   Mis reportes
                 </NavLink>
               </Button>
             )}
+
             {isAuthenticated ? (
               <>
-                <Button variant="outline" size="sm" asChild className="justify-start">
-                  <NavLink to="/sell" onClick={closeMobileMenu}>
+                <Button
+                  variant="default"
+                  size="sm"
+                  asChild
+                  className="justify-start bg-gradient-to-r from-primary to-primary/80 shadow-sm"
+                  onClick={closeMobileMenu}
+                >
+                  <NavLink to="/sell">
                     <PlusCircle className="w-4 h-4 mr-2" />
                     Vender producto
                   </NavLink>
                 </Button>
-                <div className="flex items-center justify-between py-2 border-t">
-                  <span className="text-sm text-muted-foreground">
-                    @{user?.username}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={logout} className="text-destructive">
-                    <LogOut className="w-4 h-4 mr-1" />
-                    Cerrar sesión
-                  </Button>
+
+                <div className="flex items-center justify-between py-3 border-t mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{user?.username}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </div>
                 </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { logout(); closeMobileMenu(); }}
+                  className="justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Cerrar sesión
+                </Button>
               </>
             ) : (
-              <div className="flex flex-col gap-2 border-t pt-3">
-                <Button variant="ghost" size="sm" asChild className="justify-start">
+              <div className="flex flex-col gap-2 border-t pt-3 mt-2">
+                <Button variant="ghost" size="sm" asChild className="justify-start hover:bg-muted/50" onClick={closeMobileMenu}>
                   <Link to="/login">Iniciar sesión</Link>
                 </Button>
-                <Button size="sm" asChild className="justify-start">
+                <Button
+                  size="sm"
+                  asChild
+                  className="justify-start bg-gradient-to-r from-primary to-primary/80 shadow-sm"
+                  onClick={closeMobileMenu}
+                >
                   <Link to="/register">Registrarse</Link>
                 </Button>
               </div>
@@ -169,8 +253,8 @@ export default function Router() {
           <Route path="/" element={<Navigate to={"home/"} replace />} />
 
           <Route path="/home" element={<PageTransition><Home /></PageTransition>} />
-          <Route path="/products" element={<PageTransition><ProductsPage /></PageTransition>} />
-          <Route path="/products/:id" element={<PageTransition><ProductDetail /></PageTransition>} />
+          <Route path="/products" element={<Layout><PageTransition><ProductsPage /></PageTransition></Layout>} />
+          <Route path="/products/:id" element={<Layout><PageTransition><ProductDetail /></PageTransition></Layout>} />
 
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/register" element={<PageTransition><Register /></PageTransition>} />

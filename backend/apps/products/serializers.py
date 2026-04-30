@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import Product
+from .models import Product, ProductImage
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ["id", "image"]
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -8,7 +14,8 @@ class ProductSerializer(serializers.ModelSerializer):
     seller_email = serializers.EmailField(source="seller.email", read_only=True)
     seller_phone = serializers.IntegerField(source="seller.phone", read_only=True)
     seller_address = serializers.CharField(source="seller.address", read_only=True)
-    image = serializers.ImageField(use_url=True, required=False)
+    image = serializers.SerializerMethodField()
+    images = ProductImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -21,12 +28,17 @@ class ProductSerializer(serializers.ModelSerializer):
             "category",
             "category_name",
             "image",
+            "images",
             "image_url",
             "seller_name",
             "seller_email",
             "seller_phone",
             "seller_address",
         ]
+        extra_kwargs = {
+            "description": {"required": False, "allow_blank": True},
+            "category": {"required": False, "allow_null": True},
+        }
         read_only_fields = [
             "seller",
             "seller_name",
@@ -35,7 +47,18 @@ class ProductSerializer(serializers.ModelSerializer):
             "seller_address",
             "category_name",
             "image_url",
+            "images",
         ]
+
+    def get_image(self, obj):
+        first_image = obj.images.first()
+        if first_image:
+            return first_image.image.url
+        if obj.image:
+            return obj.image.url
+        if obj.image_url:
+            return obj.image_url
+        return None
 
 
 # class ProductsGroupSerializer(serializers.ModelSerializer):

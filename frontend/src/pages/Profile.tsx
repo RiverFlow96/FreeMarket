@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { authFetch } from "@/utils/authFetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,7 +25,7 @@ interface PlanInfo {
 }
 
 export default function Profile() {
-  const { accessToken, user, isTokenExpiringSoon, refreshAccessToken } = useAuthStore();
+  const { accessToken, user } = useAuthStore();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -79,39 +80,15 @@ export default function Profile() {
     hasFetchedRef.current = accessToken;
     isInitialMount.current = false;
 
-    const fetchData = async () => {
+const fetchData = async () => {
       setLoading(true);
       setLoadingPlan(true);
 
-      let currentToken = accessToken;
-
-      if (isTokenExpiringSoon()) {
-        console.log('[Profile] Token expiring soon, refreshing...');
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          const newToken = useAuthStore.getState().accessToken;
-          if (newToken) {
-            currentToken = newToken;
-            hasFetchedRef.current = newToken;
-          }
-        } else {
-          setLoading(false);
-          setLoadingPlan(false);
-          return;
-        }
-      }
-
       try {
         const [profileRes, productsRes, planRes] = await Promise.all([
-          fetch("/api/v1/users/profile/", {
-            headers: { Authorization: `Bearer ${currentToken}` },
-          }),
-          fetch("/api/v1/users/my_products/", {
-            headers: { Authorization: `Bearer ${currentToken}` },
-          }),
-          fetch("/api/v1/products/my_plan/", {
-            headers: { Authorization: `Bearer ${currentToken}` },
-          }),
+          authFetch("/api/v1/users/profile/"),
+          authFetch("/api/v1/users/my_products/"),
+          authFetch("/api/v1/products/my_plan/"),
         ]);
 
         if (profileRes.ok) {
@@ -140,17 +117,14 @@ export default function Profile() {
     };
 
     fetchData();
-  }, [accessToken, isTokenExpiringSoon, refreshAccessToken]);
+  }, [accessToken]);
 
   const saveField = async (field: string, value: string) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/v1/users/profile/", {
+      const res = await authFetch("/api/v1/users/profile/", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [field]: value }),
       });
 
@@ -223,12 +197,9 @@ export default function Profile() {
     setChangingPassword(true);
 
     try {
-      const res = await fetch("/api/v1/users/change_password/", {
+      const res = await authFetch("/api/v1/users/change_password/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
       });
 
@@ -275,12 +246,8 @@ if (!accessToken) {
     }
 
     try {
-      const res = await fetch(`/api/v1/products/${productId}/delete_product/`, {
+      const res = await authFetch(`/api/v1/products/${productId}/delete_product/`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
       });
 
       if (res.ok) {
@@ -311,12 +278,9 @@ if (!accessToken) {
   const handleChangePlan = async (newPlan: string) => {
     setUpdatingPlan(true);
     try {
-      const res = await fetch("/api/v1/users/update_plan/", {
+      const res = await authFetch("/api/v1/users/update_plan/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan: newPlan }),
       });
 

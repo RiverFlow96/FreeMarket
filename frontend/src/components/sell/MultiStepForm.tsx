@@ -88,14 +88,8 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
         newErrors.name = "El nombre no puede exceder 100 caracteres";
       }
 
-      if (!formData.description.trim()) {
-        newErrors.description = "La descripción es requerida";
-      } else if (formData.description.length > 1000) {
+      if (formData.description.length > 1000) {
         newErrors.description = "La descripción no puede exceder 1000 caracteres";
-      }
-
-      if (!formData.category) {
-        newErrors.category = "La categoría es requerida";
       }
     }
 

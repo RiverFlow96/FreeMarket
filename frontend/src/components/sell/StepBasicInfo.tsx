@@ -48,7 +48,7 @@ export function StepBasicInfo({
 
       <div className="space-y-2">
         <label htmlFor="description" className="text-sm font-medium">
-          Descripción *
+          Descripción
         </label>
         <Textarea
           id="description"
@@ -66,13 +66,13 @@ export function StepBasicInfo({
 
       <div className="space-y-2">
         <label htmlFor="category" className="text-sm font-medium">
-          Categoría *
+          Categoría
         </label>
         <Select value={category || "none"} onValueChange={(val) => onCategoryChange(val === "none" ? "" : val)}>
           <SelectTrigger>
             <SelectValue placeholder="Selecciona una categoría" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             <SelectItem value="none">Sin categoría</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.name} value={cat.name}>

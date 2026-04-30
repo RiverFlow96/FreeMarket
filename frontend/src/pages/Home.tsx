@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
-import { ShoppingBag, Package, Users, Shield } from "lucide-react";
+import { ShoppingBag, Package, Users, Shield, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SkeletonList } from "@/components/ui/SkeletonList";
@@ -109,66 +109,76 @@ export function Home() {
 
   return (
     <div className="min-h-screen w-full">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-primary" />
-            <span className="font-bold text-lg">FreeMarket</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            {!isAuthenticated ? (
-              <Button asChild>
-                <Link to="/login">Iniciar Sesión</Link>
-              </Button>
-            ) : (
-              <>
-                <Button variant="outline" asChild>
-                  <Link to="/profile">Mi Perfil</Link>
-                </Button>
-                <Button variant="secondary" onClick={handleLogout}>
-                  Cerrar Sesión
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <section className="relative min-h-[80vh] flex flex-col items-center justify-center hero-gradient overflow-hidden pt-16">
+      <section className="relative min-h-[85vh] flex flex-col items-center justify-center hero-gradient overflow-hidden pt-20">
         <div className="floating-shapes" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,_transparent_50%)] opacity-20 dark:opacity-10" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--primary)_0%,_transparent_50%)] opacity-10 dark:opacity-5" />
 
-        <div className="relative z-10 flex flex-col items-center gap-10 p-6 sm:p-10 w-full max-w-3xl mx-4">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-                <ShoppingBag className="w-9 h-9 text-primary-foreground" />
+        <div className="absolute top-20 left-4 sm:left-10 flex flex-col gap-3 opacity-30">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border blur-sm animate-pulse" style={{ animationDelay: `${i * 0.5}s` }} />
+          ))}
+        </div>
+        <div className="absolute bottom-20 right-4 sm:right-10 flex flex-col gap-3 opacity-30">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-bl from-primary/20 to-primary/5 border blur-sm animate-pulse" style={{ animationDelay: `${i * 0.5 + 0.25}s` }} />
+          ))}
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center gap-10 p-6 sm:p-10 w-full max-w-4xl mx-4">
+          <ScrollFade>
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl shadow-primary/25 ring-4 ring-primary/10">
+                  <ShoppingBag className="w-9 h-9 sm:w-11 sm:h-11 text-primary-foreground" />
+                </div>
               </div>
+              <h1 className="font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-foreground tracking-tight">
+                Free<span className="text-primary">Market</span>
+              </h1>
+              <p className="text-lg sm:text-xl text-muted-foreground font-medium max-w-xl">
+                La plataforma para comprar y vender productos de forma fácil y segura
+              </p>
             </div>
-            <h1 className="font-extrabold text-4xl sm:text-5xl md:text-6xl text-foreground tracking-tight">
-              Free<span className="text-primary">Market</span>
-            </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground font-medium max-w-lg">
-              La plataforma para comprar y vender productos de forma fácil y segura
-            </p>
-          </div>
+          </ScrollFade>
 
           <div className="w-full max-w-xl">
             <SearchBar />
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            <Button variant="outline" asChild>
-              <Link to="/products">Explorar productos</Link>
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mt-2">
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+              className="gap-2 hover:bg-muted/80 border-2"
+            >
+              <Link to="/products">
+                Explorar productos
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </Button>
             {isAuthenticated ? (
-              <Button asChild>
-                <Link to="/sell">Vender producto</Link>
+              <Button
+                size="lg"
+                asChild
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+              >
+                <Link to="/sell">
+                  Vender producto
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
             ) : (
-              <Button asChild>
-                <Link to="/register">Regístrate para vender</Link>
+              <Button
+                size="lg"
+                asChild
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+              >
+                <Link to="/register">
+                  Empezar a vender
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </Button>
             )}
           </div>
@@ -249,58 +259,64 @@ export function Home() {
         </section>
       )}
 
-      <section className="py-16 sm:py-24 bg-secondary/30 dark:bg-secondary/50">
+      <section className="py-16 sm:py-24 bg-gradient-to-b from-secondary/30 to-background dark:from-secondary/20 dark:to-background">
         <div className="container mx-auto px-4">
           <ScrollFade>
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-foreground">
-              ¿Por qué elegir FreeMarket?
-            </h2>
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                <Shield className="w-3.5 h-3.5" />
+                <span>Tu mejor opción</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+                ¿Por qué elegir FreeMarket?
+              </h2>
+            </div>
           </ScrollFade>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <ScrollFade delay={1}>
-              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Package className="w-7 h-7 text-primary" />
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                  <Package className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Miles de productos</h3>
-                <p className="text-muted-foreground text-sm">
+                <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Miles de productos</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Encuentra lo que buscas entre miles de productos disponibles
                 </p>
               </div>
             </ScrollFade>
 
             <ScrollFade delay={2}>
-              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Users className="w-7 h-7 text-primary" />
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                  <Users className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Comunidad activa</h3>
-                <p className="text-muted-foreground text-sm">
+                <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Comunidad activa</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Conecta con vendedores y compradores de confianza
                 </p>
               </div>
             </ScrollFade>
 
             <ScrollFade delay={3}>
-              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Shield className="w-7 h-7 text-primary" />
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                  <Shield className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Transacciones seguras</h3>
-                <p className="text-muted-foreground text-sm">
+                <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Transacciones seguras</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Compra y vende con la tranquilidad de estar protegido
                 </p>
               </div>
             </ScrollFade>
 
             <ScrollFade delay={4}>
-              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <ShoppingBag className="w-7 h-7 text-primary" />
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+                  <ShoppingBag className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Fácil de usar</h3>
-                <p className="text-muted-foreground text-sm">
+                <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Fácil de usar</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Interfaz intuitiva para una experiencia de usuario fluida
                 </p>
               </div>
@@ -309,35 +325,110 @@ export function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-24 bg-primary/5 dark:bg-primary/10">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-16 sm:py-24 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 dark:from-primary/15 dark:via-primary/10 dark:to-primary/15 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--primary)_0%,_transparent_70%)] opacity-30" />
+        <div className="container mx-auto px-4 text-center relative z-10">
           <ScrollFade>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-foreground">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-foreground">
               ¿Qué esperas para empezar?
             </h2>
           </ScrollFade>
           <ScrollFade delay={1}>
-            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-              Únete a miles de usuarios que ya están vendiendo y comprando en FreeMarket
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto text-lg">
+              Empieza a comprar y vender productos hoy mismo
             </p>
           </ScrollFade>
           <ScrollFade delay={2}>
-            <Button size="lg" asChild>
-              <Link to="/products">Ver productos</Link>
-            </Button>
+            <div className="flex flex-wrap justify-center gap-4">
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    size="lg"
+                    asChild
+                    className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+                  >
+                    <Link to="/sell">
+                      Vender producto
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    asChild
+                    className="gap-2 border-2 hover:bg-muted/50"
+                  >
+                    <Link to="/products">
+                      Ver productos
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    asChild
+                    className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+                  >
+                    <Link to="/register">
+                      Crear cuenta
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    asChild
+                    className="gap-2 border-2 hover:bg-muted/50"
+                  >
+                    <Link to="/products">
+                      Ver productos
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
           </ScrollFade>
         </div>
       </section>
 
-      <footer className="py-8 bg-card border-t">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <ShoppingBag className="w-5 h-5 text-primary" />
-            <span className="font-bold text-card-foreground">FreeMarket</span>
+      <footer className="py-12 bg-card border-t">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <ShoppingBag className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-lg text-card-foreground">FreeMarket</span>
+            </div>
+            <p className="text-muted-foreground text-sm">
+              © 2026 FreeMarket. Todos los derechos reservados.
+            </p>
+            <div className="flex items-center gap-4">
+              <Link to="/products" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Productos
+              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link to="/favorites" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Favoritos
+                  </Link>
+                  <button onClick={handleLogout} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/register" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Regístrate
+                  </Link>
+                  <Link to="/login" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Iniciar sesión
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-          <p className="text-muted-foreground text-sm">
-            © 2024 FreeMarket. Todos los derechos reservados.
-          </p>
         </div>
       </footer>
     </div>

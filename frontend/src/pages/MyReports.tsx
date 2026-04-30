@@ -68,7 +68,7 @@ export default function MyReports() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold">Mis Reportes</h1>
           <p className="text-muted-foreground">
