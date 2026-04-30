@@ -2,15 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { authFetch } from "@/utils/authFetch";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingBag, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
-import { ImageUpload } from "@/components/ImageUpload";
-import toast from "react-hot-toast";
-import { CURRENCY_LABELS, type Currency } from "@/utils/currency";
+import { ShoppingBag, ArrowLeft } from "lucide-react";
+import { MultiStepForm } from "@/components/sell/MultiStepForm";
 
 interface Category {
   name: string;
@@ -27,16 +21,7 @@ export default function SellProduct() {
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState<Currency>("CUP");
-  const [category, setCategory] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageUrl, setImageUrl] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
   const [loadingPlan, setLoadingPlan] = useState(true);
 
@@ -71,113 +56,9 @@ export default function SellProduct() {
     fetchData();
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    const categoryId = category ? (categories.findIndex(c => c.name === category) + 1) : null;
-
-    try {
-      let res: Response;
-
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("description", description);
-        formData.append("price", price);
-        formData.append("currency", currency);
-        if (categoryId) formData.append("category", categoryId.toString());
-        formData.append("image", imageFile);
-
-        res = await authFetch("/api/v1/products/", {
-          method: "POST",
-          body: formData,
-        });
-      } else {
-        res = await authFetch("/api/v1/products/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            description,
-            price: parseFloat(price),
-            currency,
-            category: categoryId,
-            image_url: imageUrl || null,
-          }),
-        });
-      }
-
-      if (!res.ok) {
-        const errorMessages: string[] = [];
-
-        try {
-          const contentType = res.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
-            const errors = Object.entries(data);
-
-            for (const [field, messages] of errors) {
-              if (Array.isArray(messages)) {
-                for (const msg of messages) {
-                  if (field === "name") {
-                    errorMessages.push(`Nombre: ${msg}`);
-                  } else if (field === "description") {
-                    errorMessages.push(`Descripción: ${msg}`);
-                  } else if (field === "price") {
-                    errorMessages.push(`Precio: ${msg}`);
-                  } else if (field === "category") {
-                    errorMessages.push(`Categoría: ${msg}`);
-                  } else {
-                    errorMessages.push(msg);
-                  }
-                }
-              }
-            }
-          }
-        } catch {
-          // La respuesta no es JSON válido
-        }
-
-        if (errorMessages.length === 0) {
-          throw new Error(`Error ${res.status}: No se pudo publicar el producto.`);
-        }
-        throw new Error(errorMessages.join(". "));
-      }
-
-      let product;
-      try {
-        product = await res.json();
-      } catch {
-        throw new Error("Producto publicado pero no se pudo obtener la respuesta del servidor.");
-      }
-
-      toast.success(`Tu producto "${product.name}" ha sido publicado exitosamente.`);
-
-      navigate(`/products/${product.id}`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "No se pudo publicar el producto. Por favor, inténtalo de nuevo.";
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!isAuthenticated) {
     return null;
   }
-
-  if (loadingPlan) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const planName = planInfo?.plan === "plus" ? "Plus" : planInfo?.plan === "pro" ? "Pro" : "Gratis";
 
   return (
     <div className="min-h-screen bg-background">
@@ -194,30 +75,6 @@ export default function SellProduct() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {planInfo && !planInfo.can_add_product && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-amber-800">Límite de productos alcanzado</h3>
-                <p className="text-sm text-amber-700 mt-1">
-                  Has alcanzado el límite de <strong>{planInfo.product_limit}</strong> productos de tu plan <strong>{planName}</strong>.
-                  <br />
-                  Para agregar más productos, cambia a un plan superior.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 border-amber-600 text-amber-700 hover:bg-amber-100"
-                  onClick={() => navigate("/profile")}
-                >
-                  Ver planes disponibles
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
         <Card>
           <CardHeader>
             <div className="flex items-center gap-3 mb-2">
@@ -227,7 +84,7 @@ export default function SellProduct() {
               <div>
                 <CardTitle className="text-xl">Vender producto</CardTitle>
                 <CardDescription>
-                  Completa los datos de tu producto
+                  Completa los datos de tu producto en 4 pasos
                   {planInfo && (
                     <span className="ml-2 text-muted-foreground">
                       ({planInfo.product_count}/{planInfo.product_limit} productos)
@@ -237,107 +94,13 @@ export default function SellProduct() {
               </div>
             </div>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-6">
-              {error && (
-                <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">Nombre del producto *</label>
-                <Input
-                  id="name"
-                  placeholder="Ej: iPhone 14 Pro"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">Descripción *</label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe tu producto (estado, características, etc.)"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="price" className="text-sm font-medium">Precio *</label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="currency" className="text-sm font-medium">Moneda</label>
-                  <Select value={currency} onValueChange={(val) => setCurrency(val as Currency)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona moneda" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(CURRENCY_LABELS) as Currency[]).map((curr) => (
-                        <SelectItem key={curr} value={curr}>
-                          {CURRENCY_LABELS[curr]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="category" className="text-sm font-medium">Categoría</label>
-                  <Select value={category || "none"} onValueChange={(val) => setCategory(val === "none" ? "" : val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Sin categoría</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.name} value={cat.name}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Imagen del producto (opcional)</label>
-                <ImageUpload
-                  file={imageFile}
-                  url={imageUrl}
-                  onFileChange={setImageFile}
-                  onUrlChange={setImageUrl}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={loading || ((planInfo && !planInfo.can_add_product) ?? false)}
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShoppingBag className="w-4 h-4 mr-2" />}
-                {loading ? "Publicando..." : "Publicar producto"}
-              </Button>
-            </CardContent>
-          </form>
+          <CardContent>
+            <MultiStepForm
+              categories={categories}
+              planInfo={planInfo}
+              loadingPlan={loadingPlan}
+            />
+          </CardContent>
         </Card>
       </main>
     </div>
