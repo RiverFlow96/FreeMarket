@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatPrice, type Currency } from "@/utils/currency";
+import { SkeletonProductDetail } from "@/components/ui/SkeletonProductDetail";
 import { ContactSellerDialog } from "@/components/ContactSellerDialog";
 import { ReportModal } from "@/components/ReportModal";
 import { useAuthStore } from "@/store/authStore";
@@ -90,7 +91,7 @@ export default function ProductDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <SkeletonProductDetail />
       </div>
     );
   }
