@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingBag, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
-import { toast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { CURRENCY_LABELS, type Currency } from "@/utils/currency";
 
 interface Category {
@@ -153,21 +153,13 @@ export default function SellProduct() {
         throw new Error("Producto publicado pero no se pudo obtener la respuesta del servidor.");
       }
 
-      toast({
-        title: "Producto publicado",
-        description: `Tu producto "${product.name}" ha sido publicado exitosamente.`,
-        variant: "success",
-      });
+      toast.success(`Tu producto "${product.name}" ha sido publicado exitosamente.`);
 
       navigate(`/products/${product.id}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "No se pudo publicar el producto. Por favor, inténtalo de nuevo.";
       setError(errorMessage);
-      toast({
-        title: "Error al publicar",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -339,7 +331,7 @@ export default function SellProduct() {
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={loading || (planInfo && !planInfo.can_add_product)}
+                disabled={loading || ((planInfo && !planInfo.can_add_product) ?? false)}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ShoppingBag className="w-4 h-4 mr-2" />}
                 {loading ? "Publicando..." : "Publicar producto"}

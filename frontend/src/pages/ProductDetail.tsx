@@ -19,6 +19,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  currency?: string;
   image?: string | null;
   category_name?: string;
   seller_name?: string;

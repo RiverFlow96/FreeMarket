@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/components/ui/use-toast";
+import toast from "react-hot-toast";
 import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star } from "lucide-react";
 
 interface Product {
@@ -151,25 +151,13 @@ export default function Profile() {
         } else if (field === "address") {
           setAddress(data.address || "");
         }
-        toast({
-          title: "Actualizado",
-          description: `${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`,
-          variant: "success",
-        });
+        toast.success(`${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`);
       } else {
         const data = await res.json();
-        toast({
-          title: "Error",
-          description: data[field]?.[0] || "Error al actualizar.",
-          variant: "destructive",
-        });
+        toast.error(data[field]?.[0] || "Error al actualizar.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al actualizar.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al actualizar.");
     } finally {
       setSaving(false);
     }
@@ -220,28 +208,16 @@ export default function Profile() {
       });
 
       if (res.ok) {
-        toast({
-          title: "Contraseña cambiada",
-          description: "Tu contraseña ha sido actualizada exitosamente.",
-          variant: "success",
-        });
+        toast.success("Tu contraseña ha sido actualizada exitosamente.");
         setOldPassword("");
         setNewPassword("");
         setShowPasswordForm(false);
       } else {
         const data = await res.json();
-        toast({
-          title: "Error",
-          description: data.old_password?.[0] || "Error al cambiar contraseña.",
-          variant: "destructive",
-        });
+        toast.error(data.old_password?.[0] || "Error al cambiar contraseña.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al cambiar la contraseña.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al cambiar la contraseña.");
     } finally {
       setChangingPassword(false);
     }
@@ -260,26 +236,13 @@ export default function Profile() {
 
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== productId));
-        toast({
-          title: "Producto eliminado",
-          description: "El producto ha sido eliminado exitosamente.",
-          variant: "success",
-        });
-        fetchPlanInfo();
+        toast.success("El producto ha sido eliminado exitosamente.");
       } else {
         const data = await res.json().catch(() => ({}));
-        toast({
-          title: "Error",
-          description: data.error || "No tienes permiso para eliminar este producto.",
-          variant: "destructive",
-        });
+        toast.error(data.error || "No tienes permiso para eliminar este producto.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al eliminar el producto.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al eliminar el producto.");
     }
   };
 
@@ -302,25 +265,13 @@ export default function Profile() {
           plan: data.plan,
           product_limit: data.product_limit,
         });
-        toast({
-          title: "Plan actualizado",
-          description: `Ahora tienes el plan ${data.plan === "plus" ? "Plus" : data.plan === "pro" ? "Pro" : "Gratis"} con límite de ${data.product_limit} productos.`,
-          variant: "success",
-        });
+        toast.success(`Ahora tienes el plan ${data.plan === "plus" ? "Plus" : data.plan === "pro" ? "Pro" : "Gratis"} con límite de ${data.product_limit} productos.`);
       } else {
         const data = await res.json();
-        toast({
-          title: "Error",
-          description: data.plan?.[0] || "Error al actualizar el plan.",
-          variant: "destructive",
-        });
+        toast.error(data.plan?.[0] || "Error al actualizar el plan.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al actualizar el plan.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al actualizar el plan.");
     } finally {
       setUpdatingPlan(false);
     }

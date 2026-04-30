@@ -31,7 +31,7 @@ backend/apps/*/migrations/
 # AI Configurations
 .continue/
 AGENTS.md
-
+ERRORS_AND_AGENTS.md
 TODO.md
 
 localhost.har

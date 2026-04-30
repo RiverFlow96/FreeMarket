@@ -198,7 +198,8 @@ Ver [README.md](README.md) para un diagrama y detalles de la estructura.
 - Fortalecer permisos para que solo el dueño pueda modificar/eliminar sus productos.
 - Agregar validaciones personalizadas en los serializadores.
 - Implementar mensajería interna, sistema de reportes y favoritos.
-- Mantener la documentación de la API actualizada.
+- Mantener la documentación de la API actualizada
+- Agregar errores al archivo ERRORS_AND_AGENTS.md (no commitear).
 - Ver más en [TODO.md](TODO.md).
 
 ---
