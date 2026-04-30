@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { formatPrice, getCurrencyIcon, type Currency } from "@/utils/currency";
 import { getFavorites, addFavorite, removeFavorite } from "@/utils/favorites";
@@ -37,6 +37,7 @@ import {
   User,
   Package,
 } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Product {
   id: number;
@@ -54,6 +55,133 @@ interface Category {
 }
 
 type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
+
+interface FilterContentProps {
+  searchQuery: string;
+  setSearchQuery: (val: string) => void;
+  selectedCategory: string;
+  setSelectedCategory: (val: string) => void;
+  priceRange: [number, number];
+  setPriceRange: (val: [number, number]) => void;
+  sortBy: SortOption;
+  setSortBy: (val: SortOption) => void;
+  maxPrice: number;
+  categories: Category[];
+  onSearch: (e: React.FormEvent) => void;
+  onClearFilters: () => void;
+  activeFiltersCount: number;
+  onSubmit?: () => void;
+}
+
+function FilterContent({
+  searchQuery,
+  setSearchQuery,
+  selectedCategory,
+  setSelectedCategory,
+  priceRange,
+  setPriceRange,
+  sortBy,
+  setSortBy,
+  maxPrice,
+  categories,
+  onSearch,
+  onClearFilters,
+  activeFiltersCount,
+  onSubmit,
+}: FilterContentProps) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="font-medium mb-3 text-sm">Buscar</h3>
+        <form
+          onSubmit={(e) => {
+            onSearch(e);
+            onSubmit?.();
+          }}
+          className="flex gap-2"
+        >
+          <Input
+            type="search"
+            placeholder="Buscar..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
+          <Button type="submit" variant="default" size="icon">
+            <Search className="w-4 h-4" />
+          </Button>
+        </form>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-medium mb-3 text-sm">Categoría</h3>
+        <Select
+          value={selectedCategory}
+          onValueChange={setSelectedCategory}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Todas las categorías" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.name} value={cat.name}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-medium mb-3 text-sm">Precio</h3>
+        <Slider
+          value={priceRange}
+          onValueChange={(val) => setPriceRange(val as [number, number])}
+          min={0}
+          max={maxPrice || 5000}
+          step={maxPrice > 1000 ? 100 : 50}
+          className="mb-3"
+        />
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <span>{formatPrice(priceRange[0])}</span>
+          <span>{formatPrice(priceRange[1])}</span>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-medium mb-3 text-sm">Ordenar por</h3>
+        <Select
+          value={sortBy}
+          onValueChange={(val) => setSortBy(val as SortOption)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Ordenar por" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
+            <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
+            <SelectItem value="price-asc">Precio (menor)</SelectItem>
+            <SelectItem value="price-desc">Precio (mayor)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {activeFiltersCount > 0 && (
+        <Button variant="outline" className="w-full" onClick={onClearFilters}>
+          <X className="w-4 h-4 mr-2" />
+          Limpiar filtros
+        </Button>
+      )}
+    </div>
+  );
+}
 
 function cleanImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
@@ -90,16 +218,21 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
   const [maxPrice, setMaxPrice] = useState(2000);
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showFiltersMobile, setShowFiltersMobile] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [localFavorites, setLocalFavorites] = useState<Set<string>>(() =>
     new Set(getFavorites())
   );
+  const [animateCards, setAnimateCards] = useState(false);
+  const [animatingHeart, setAnimatingHeart] = useState<number | null>(null);
 
   const toggleFavorite = (e: React.MouseEvent, productId: number) => {
     e.preventDefault();
@@ -116,6 +249,8 @@ export default function ProductsPage() {
       addFavorite(id);
       setLocalFavorites((prev) => new Set(prev).add(id));
     }
+    setAnimatingHeart(productId);
+    setTimeout(() => setAnimatingHeart(null), 300);
   };
 
   const params = new URLSearchParams(location.search);
@@ -142,7 +277,7 @@ export default function ProductsPage() {
         setPriceRange([0, max]);
       }
     } catch {
-      setError("No se pudieron cargar los productos.");
+      setError("No se konnten cargar los productos.");
     } finally {
       setLoading(false);
     }
@@ -213,6 +348,7 @@ export default function ProductsPage() {
         setError("Error al cargar los datos.");
       } finally {
         setLoading(false);
+        setTimeout(() => setAnimateCards(true), 100);
       }
     };
 
@@ -224,7 +360,7 @@ export default function ProductsPage() {
     const newUrl = searchQuery
       ? `/products?q=${encodeURIComponent(searchQuery)}`
       : "/products";
-    window.history.pushState({}, "", newUrl);
+    navigate(newUrl);
     fetchProducts(searchQuery);
   };
 
@@ -232,12 +368,16 @@ export default function ProductsPage() {
     setImageErrors((prev) => new Set(prev).add(productId));
   };
 
+  const handleImageLoad = (productId: number) => {
+    setLoadedImages((prev) => new Set(prev).add(productId));
+  };
+
   const clearFilters = () => {
     setSelectedCategory("all");
     setSortBy("name-asc");
     setPriceRange([0, maxPrice]);
     setSearchQuery("");
-    window.history.pushState({}, "", "/products");
+    navigate("/products");
     fetchProducts("");
   };
 
@@ -261,10 +401,27 @@ export default function ProductsPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setShowSidebar(!showSidebar)}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground hidden lg:flex"
                 title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
                 <Menu className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFiltersMobile(true)}
+                className="lg:hidden flex items-center gap-2"
+              >
+                <Filter className="w-4 h-4" />
+                Filtros
+                {activeFiltersCount() > 0 && (
+                  <Badge
+                    variant="default"
+                    className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                  >
+                    {activeFiltersCount()}
+                  </Badge>
+                )}
               </Button>
               <Link
                 to="/"
@@ -283,7 +440,12 @@ export default function ProductsPage() {
                       <span className="hidden md:inline">Perfil</span>
                     </Link>
                   </Button>
-                  <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="hidden sm:flex"
+                  >
                     <Link to="/sell">
                       <PlusCircle className="w-4 h-4 mr-1 sm:mr-2" />
                       <span className="hidden md:inline">Vender</span>
@@ -319,7 +481,11 @@ export default function ProductsPage() {
                 className="lg:hidden text-muted-foreground hover:text-foreground"
                 title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
-                {showSidebar ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {showSidebar ? (
+                  <PanelLeftClose className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
               </Button>
             </div>
           </div>
@@ -328,11 +494,19 @@ export default function ProductsPage() {
 
       <main className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
-          <Link to="/" className="text-muted-foreground hover:text-primary">
+          <Link
+            to="/home"
+            className="text-muted-foreground hover:text-primary"
+          >
             Inicio
           </Link>
           <span className="text-muted-foreground">/</span>
-          <span className="text-foreground">Productos</span>
+          <Link
+            to="/products"
+            className="text-foreground hover:text-primary"
+          >
+            Productos
+          </Link>
           {query && (
             <>
               <span className="text-muted-foreground">/</span>
@@ -345,94 +519,21 @@ export default function ProductsPage() {
           {showSidebar && (
             <aside className="lg:w-64 shrink-0">
               <div className="lg:sticky lg:top-24 space-y-6">
-                <div>
-                  <h3 className="font-medium mb-3 text-sm">Buscar</h3>
-                  <form onSubmit={handleSearch} className="flex gap-2">
-                    <Input
-                      type="search"
-                      placeholder="Buscar..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full"
-                    />
-                    <Button type="submit" variant="default" size="icon">
-                      <Search className="w-4 h-4" />
-                    </Button>
-                  </form>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-medium mb-3 text-sm">Categoría</h3>
-                  <Select
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Todas las categorías" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.name} value={cat.name}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-medium mb-3 text-sm">Precio</h3>
-                  <Slider
-                    value={priceRange}
-                    onValueChange={(val) =>
-                      setPriceRange(val as [number, number])
-                    }
-                    min={0}
-                    max={maxPrice || 5000}
-                    step={maxPrice > 1000 ? 100 : 50}
-                    className="mb-3"
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{formatPrice(priceRange[0])}</span>
-                    <span>{formatPrice(priceRange[1])}</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <h3 className="font-medium mb-3 text-sm">Ordenar por</h3>
-                  <Select
-                    value={sortBy}
-                    onValueChange={(val) => setSortBy(val as SortOption)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Ordenar por" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
-                      <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
-                      <SelectItem value="price-asc">Precio (menor)</SelectItem>
-                      <SelectItem value="price-desc">Precio (mayor)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {activeFiltersCount() > 0 && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={clearFilters}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Limpiar filtros
-                  </Button>
-                )}
+                <FilterContent
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  priceRange={priceRange}
+                  setPriceRange={setPriceRange}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  maxPrice={maxPrice}
+                  categories={categories}
+                  onSearch={handleSearch}
+                  onClearFilters={clearFilters}
+                  activeFiltersCount={activeFiltersCount()}
+                />
               </div>
             </aside>
           )}
@@ -484,11 +585,16 @@ export default function ProductsPage() {
               )
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            <div
+              className={`grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 ${
+                animateCards ? "animate-cards" : ""
+              }`}
+            >
               {filteredProducts.map((product) => {
                 const cleanedUrl = cleanImageUrl(product.image);
                 const hasError = imageErrors.has(product.id);
                 const showImage = cleanedUrl && !hasError;
+                const isImageLoaded = loadedImages.has(product.id);
 
                 return (
                   <Link
@@ -496,18 +602,25 @@ export default function ProductsPage() {
                     key={product.id}
                     className="block h-full"
                   >
-                    <Card className="overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group flex flex-col">
+                    <Card
+                      className={`overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group flex flex-col card-hover-lift ${
+                        animateCards ? "product-card-animated" : ""
+                      }`}
+                    >
                       <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
                         {showImage ? (
                           <img
                             src={cleanedUrl}
                             alt={product.name}
-                            className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                            className={`object-cover w-full h-full transition-transform group-hover:scale-105 ${
+                              isImageLoaded ? "animate-image-fade-in" : ""
+                            }`}
+                            onLoad={() => handleImageLoad(product.id)}
                             onError={() => handleImageError(product.id)}
                             loading="lazy"
                           />
                         ) : (
-                          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
+                          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50 animate-image-fade-in">
                             <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
                             <span className="text-xs">Sin imagen</span>
                           </div>
@@ -515,13 +628,21 @@ export default function ProductsPage() {
                         <button
                           onClick={(e) => toggleFavorite(e, product.id)}
                           className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background transition-colors"
-                          aria-label={localFavorites.has(String(product.id)) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                          aria-label={
+                            localFavorites.has(String(product.id))
+                              ? "Quitar de favoritos"
+                              : "Agregar a favoritos"
+                          }
                         >
                           <Heart
                             className={`w-5 h-5 transition-all ${
                               localFavorites.has(String(product.id))
                                 ? "fill-red-500 text-red-500"
                                 : "text-muted-foreground"
+                            } ${
+                              animatingHeart === product.id
+                                ? "animate-heart-pulse"
+                                : ""
                             }`}
                           />
                         </button>
@@ -545,14 +666,14 @@ export default function ProductsPage() {
                             {product.description}
                           </CardDescription>
                         </div>
-<div className="flex items-center justify-between w-full mt-3">
-                            <span className="text-lg sm:text-xl font-bold text-primary">
-                              <span className="text-sm mr-1">
-                                {getCurrencyIcon(product.currency as Currency)}
-                              </span>
-                              {product.price}
+                        <div className="flex items-center justify-between w-full mt-3">
+                          <span className="text-lg sm:text-xl font-bold text-primary">
+                            <span className="text-sm mr-1">
+                              {getCurrencyIcon(product.currency as Currency)}
                             </span>
-                          </div>
+                            {product.price}
+                          </span>
+                        </div>
                       </div>
                     </Card>
                   </Link>
@@ -562,6 +683,46 @@ export default function ProductsPage() {
           </div>
         </div>
       </main>
+
+      <Dialog
+        open={showFiltersMobile}
+        onOpenChange={setShowFiltersMobile}
+      >
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Filtros</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowFiltersMobile(false)}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          <FilterContent
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            maxPrice={maxPrice}
+            categories={categories}
+            onSearch={handleSearch}
+            onClearFilters={clearFilters}
+            activeFiltersCount={activeFiltersCount()}
+            onSubmit={() => setShowFiltersMobile(false)}
+          />
+          <Button
+            className="w-full mt-4"
+            onClick={() => setShowFiltersMobile(false)}
+          >
+            Aplicar filtros
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

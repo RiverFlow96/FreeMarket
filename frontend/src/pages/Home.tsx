@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
 import { ShoppingBag, Package, Users, Shield } from "lucide-react";
@@ -38,6 +38,39 @@ function cleanImageUrl(url: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+function ScrollFade({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(element);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`scroll-fade-in ${isVisible ? "visible" : ""}`}
+      style={{ transitionDelay: delay ? `${delay * 0.1}s` : "0s" }}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function Home() {
@@ -101,21 +134,22 @@ export function Home() {
         </div>
       </header>
 
-      <section className="relative min-h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100/50 overflow-hidden pt-16">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.1),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(59,130,246,0.08),transparent_40%)]" />
+      <section className="relative min-h-[80vh] flex flex-col items-center justify-center hero-gradient overflow-hidden pt-16">
+        <div className="floating-shapes" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--primary)_0%,_transparent_50%)] opacity-20 dark:opacity-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--primary)_0%,_transparent_50%)] opacity-10 dark:opacity-5" />
 
         <div className="relative z-10 flex flex-col items-center gap-10 p-6 sm:p-10 w-full max-w-3xl mx-4">
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-                <ShoppingBag className="w-9 h-9 text-white" />
+                <ShoppingBag className="w-9 h-9 text-primary-foreground" />
               </div>
             </div>
-            <h1 className="font-extrabold text-4xl sm:text-5xl md:text-6xl text-gray-900 tracking-tight">
+            <h1 className="font-extrabold text-4xl sm:text-5xl md:text-6xl text-foreground tracking-tight">
               Free<span className="text-primary">Market</span>
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 font-medium max-w-lg">
+            <p className="text-lg sm:text-xl text-muted-foreground font-medium max-w-lg">
               La plataforma para comprar y vender productos de forma fácil y segura
             </p>
           </div>
@@ -141,142 +175,167 @@ export function Home() {
         </div>
 
         <div className="absolute bottom-8 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-gray-300 flex justify-center pt-2">
-            <div className="w-1 h-2 bg-gray-300 rounded-full" />
+          <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex justify-center pt-2">
+            <div className="w-1 h-2 bg-muted-foreground/30 rounded-full" />
           </div>
         </div>
       </section>
 
       {!loading && recentProducts.length > 0 && (
-        <section className="py-16 sm:py-24 bg-white">
+        <section className="py-16 sm:py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-12">
-              <h2 className="text-2xl sm:text-3xl font-bold">
-                Productos recientes
-              </h2>
-              <Button variant="link" asChild>
-                <Link to="/products">Ver todos</Link>
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-              {recentProducts.map((product) => {
-                const cleanedUrl = cleanImageUrl(product.image);
-                const hasError = imageErrors.has(product.id);
-                const showImage = cleanedUrl && !hasError;
-                return (
-                  <Link to={`/products/${product.id}`} key={product.id} className="block h-full">
-                    <Card className="overflow-hidden transition-all hover:shadow-md h-full group flex flex-col">
-                      <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
-                        {showImage ? (
-                          <img src={cleanedUrl} alt={product.name} className="object-cover w-full h-full transition-transform group-hover:scale-105" onError={() => handleImageError(product.id)} loading="lazy" />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
-                            <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
-                            <span className="text-xs">Sin imagen</span>
+            <ScrollFade>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                  Productos recientes
+                </h2>
+                <Button variant="link" asChild>
+                  <Link to="/products">Ver todos</Link>
+                </Button>
+              </div>
+            </ScrollFade>
+            <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-transparent -mx-4 px-4">
+              <div className="flex gap-4 pb-4" style={{ minWidth: 'min-content' }}>
+                {recentProducts.map((product, index) => {
+                  const cleanedUrl = cleanImageUrl(product.image);
+                  const hasError = imageErrors.has(product.id);
+                  const showImage = cleanedUrl && !hasError;
+                  return (
+                    <ScrollFade delay={index + 1} key={product.id}>
+                      <Link to={`/products/${product.id}`} className="block">
+                        <Card className="w-56 sm:w-64 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 group flex flex-col bg-card border-2 hover:border-primary/30">
+                          <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
+                            {showImage ? (
+                              <img src={cleanedUrl} alt={product.name} className="object-cover w-full h-full transition-transform group-hover:scale-105" onError={() => handleImageError(product.id)} loading="lazy" />
+                            ) : (
+                              <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
+                                <ShoppingBag className="w-16 h-16" />
+                                <span className="text-xs">Sin imagen</span>
+                              </div>
+                            )}
+                            <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-primary/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <span className="text-primary-foreground text-xs">→</span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col flex-1 p-3 sm:p-4 pt-0">
-                        <CardHeader className="p-0 mb-2">
-                          <CardTitle className="text-sm sm:text-base line-clamp-1">{product.name}</CardTitle>
-                        </CardHeader>
-                        <CardDescription className="text-xs sm:text-sm line-clamp-2">{product.description}</CardDescription>
-                        <div className="mt-3">
-                          <span className="text-lg sm:text-xl font-bold text-primary">
-                            <span className="text-sm mr-1">{getCurrencyIcon(product.currency as Currency)}</span>
-                            {product.price}
-                          </span>
-                        </div>
-                      </div>
-                    </Card>
-                  </Link>
-                );
-              })}
+                          <div className="flex flex-col flex-1 p-4 pt-3">
+                            <CardHeader className="p-0 mb-1">
+                              <CardTitle className="text-base font-semibold line-clamp-1 text-card-foreground">{product.name}</CardTitle>
+                            </CardHeader>
+                            <CardDescription className="text-sm line-clamp-2 text-muted-foreground">{product.description}</CardDescription>
+                            <div className="mt-3 pt-2 border-t border-border/50">
+                              <span className="text-xl font-bold text-primary">
+                                <span className="text-sm mr-1">{getCurrencyIcon(product.currency as Currency)}</span>
+                                {product.price}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    </ScrollFade>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {loading && (
-        <section className="py-16 sm:py-24 bg-white">
+        <section className="py-16 sm:py-24 bg-background">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">Productos recientes</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-foreground">Productos recientes</h2>
             <SkeletonList count={8} />
           </div>
         </section>
       )}
 
-      <section className="py-16 sm:py-24 bg-white">
+      <section className="py-16 sm:py-24 bg-secondary/30 dark:bg-secondary/50">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12">
-            ¿Por qué elegir FreeMarket?
-          </h2>
+          <ScrollFade>
+            <h2 className="text-2xl sm:text-3xl font-bold text-center mb-12 text-foreground">
+              ¿Por qué elegir FreeMarket?
+            </h2>
+          </ScrollFade>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <Package className="w-7 h-7 text-primary" />
+            <ScrollFade delay={1}>
+              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Package className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Miles de productos</h3>
+                <p className="text-muted-foreground text-sm">
+                  Encuentra lo que buscas entre miles de productos disponibles
+                </p>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Miles de productos</h3>
-              <p className="text-muted-foreground text-sm">
-                Encuentra lo que buscas entre miles de productos disponibles
-              </p>
-            </div>
+            </ScrollFade>
 
-            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <Users className="w-7 h-7 text-primary" />
+            <ScrollFade delay={2}>
+              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Users className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Comunidad activa</h3>
+                <p className="text-muted-foreground text-sm">
+                  Conecta con vendedores y compradores de confianza
+                </p>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Comunidad activa</h3>
-              <p className="text-muted-foreground text-sm">
-                Conecta con vendedores y compradores de confianza
-              </p>
-            </div>
+            </ScrollFade>
 
-            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <Shield className="w-7 h-7 text-primary" />
+            <ScrollFade delay={3}>
+              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Shield className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Transacciones seguras</h3>
+                <p className="text-muted-foreground text-sm">
+                  Compra y vende con la tranquilidad de estar protegido
+                </p>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Transacciones seguras</h3>
-              <p className="text-muted-foreground text-sm">
-                Compra y vende con la tranquilidad de estar protegido
-              </p>
-            </div>
+            </ScrollFade>
 
-            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors">
-              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                <ShoppingBag className="w-7 h-7 text-primary" />
+            <ScrollFade delay={4}>
+              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-card hover:bg-accent transition-colors border">
+                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <ShoppingBag className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2 text-card-foreground">Fácil de usar</h3>
+                <p className="text-muted-foreground text-sm">
+                  Interfaz intuitiva para una experiencia de usuario fluida
+                </p>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Fácil de usar</h3>
-              <p className="text-muted-foreground text-sm">
-                Interfaz intuitiva para una experiencia de usuario fluida
-              </p>
-            </div>
+            </ScrollFade>
           </div>
         </div>
       </section>
 
-      <section className="py-16 sm:py-24 bg-gradient-to-br from-primary/5 to-primary/10">
+      <section className="py-16 sm:py-24 bg-primary/5 dark:bg-primary/10">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-            ¿Qué esperas para empezar?
-          </h2>
-          <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-            Únete a miles de usuarios que ya están vendiendo y comprando en FreeMarket
-          </p>
-          <Button size="lg" asChild>
-            <Link to="/products">Ver productos</Link>
-          </Button>
+          <ScrollFade>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-foreground">
+              ¿Qué esperas para empezar?
+            </h2>
+          </ScrollFade>
+          <ScrollFade delay={1}>
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+              Únete a miles de usuarios que ya están vendiendo y comprando en FreeMarket
+            </p>
+          </ScrollFade>
+          <ScrollFade delay={2}>
+            <Button size="lg" asChild>
+              <Link to="/products">Ver productos</Link>
+            </Button>
+          </ScrollFade>
         </div>
       </section>
 
-      <footer className="py-8 bg-gray-900 text-white">
+      <footer className="py-8 bg-card border-t">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <ShoppingBag className="w-5 h-5" />
-            <span className="font-bold">FreeMarket</span>
+            <ShoppingBag className="w-5 h-5 text-primary" />
+            <span className="font-bold text-card-foreground">FreeMarket</span>
           </div>
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             © 2024 FreeMarket. Todos los derechos reservados.
           </p>
         </div>
