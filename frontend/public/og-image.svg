@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#205081"/>
+      <stop offset="100%" style="stop-color:#0d2d52"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g transform="translate(600, 250)">
+    <path d="M-80 -40 L80 -40 L60 60 L0 100 L-60 60 Z" fill="#ffffff" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="0" cy="0" r="32" fill="#205081"/>
+  </g>
+  <text x="600" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#ffffff">FreeMarket</text>
+  <text x="600" y="480" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#cccccc">Tu marketplace de confianza</text>
+  <text x="600" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#999999">Compra y vende productos en tu zona</text>
+</svg>

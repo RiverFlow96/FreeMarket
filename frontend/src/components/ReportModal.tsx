@@ -106,7 +106,7 @@ export function ReportModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent onClose={handleClose}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Flag className="w-5 h-5 text-destructive" />

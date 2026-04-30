@@ -1,4 +1,3 @@
-import { Label } from "@/components/ui/label";
 import { CURRENCY_LABELS, type Currency } from "@/utils/currency";
 
 interface FormData {
@@ -14,17 +13,11 @@ interface FormData {
 interface StepReviewProps {
   formData: FormData;
   onEditStep: (step: number) => void;
-  termsAccepted: boolean;
-  onTermsChange: (accepted: boolean) => void;
-  errors: { terms?: string };
 }
 
 export function StepReview({
   formData,
   onEditStep,
-  termsAccepted,
-  onTermsChange,
-  errors,
 }: StepReviewProps) {
   const categoryName = formData.category || "Sin categoría";
 
@@ -105,26 +98,6 @@ export function StepReview({
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      <div className="pt-4 border-t">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="terms"
-            checked={termsAccepted}
-            onChange={(e) => onTermsChange(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-300"
-          />
-          <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
-            Acepto los términos y condiciones *
-          </Label>
-        </div>
-        {errors.terms && (
-          <span className="text-xs text-destructive block mt-1">
-            {errors.terms}
-          </span>
         )}
       </div>
     </div>

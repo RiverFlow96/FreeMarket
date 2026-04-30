@@ -3,7 +3,18 @@ import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingBag, ArrowLeft, Mail, Phone, User, MapPin, Send, Flag } from "lucide-react";
+import {
+  ShoppingBag,
+  ArrowLeft,
+  Mail,
+  Phone,
+  User,
+  MapPin,
+  Send,
+  Flag,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -68,6 +79,7 @@ export default function ProductDetail() {
   const [imageError, setImageError] = useState(false);
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showSellerInfo, setShowSellerInfo] = useState(true);
   const { isAuthenticated } = useAuthStore();
 
   const retryRef = useCallback(() => {
@@ -82,6 +94,16 @@ export default function ProductDetail() {
       .then((data) => {
         setProduct(data);
         setLoading(false);
+
+        document.title = `${data.name} | FreeMarket`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+          metaDesc.setAttribute(
+            "content",
+            data.description?.substring(0, 160) ||
+              "Producto en FreeMarket",
+          );
+        }
       })
       .catch(() => {
         setError("No se pudo cargar el producto.");
@@ -105,7 +127,7 @@ export default function ProductDetail() {
   if (error || !product) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
           <div className="container mx-auto px-4 py-4">
             <Link
               to="/products"
@@ -129,20 +151,20 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
           <Link
             to="/products"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Volver a productos
+            <span className="hidden sm:inline">Volver a productos</span>
           </Link>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <main className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           <div className="relative w-full max-w-md mx-auto lg:max-w-none aspect-square lg:aspect-[4/3] bg-muted rounded-lg overflow-hidden">
             {showImage ? (
               <img
@@ -158,15 +180,17 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-6">
             <div>
               {product.category_name && (
                 <Badge variant="secondary" className="mb-2">
                   {product.category_name}
                 </Badge>
               )}
-              <h1 className="text-2xl sm:text-3xl font-bold">{product.name}</h1>
-              <p className="text-3xl sm:text-4xl font-bold text-primary mt-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
+                {product.name}
+              </h1>
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mt-2">
                 {formatPrice(product.price, (product.currency as Currency) || "CUP")}
               </p>
             </div>
@@ -174,8 +198,10 @@ export default function ProductDetail() {
             <Separator />
 
             <div>
-              <h2 className="text-lg font-semibold mb-2">Descripción</h2>
-              <p className="text-muted-foreground whitespace-pre-wrap">
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                Descripción
+              </h2>
+              <p className="text-muted-foreground text-sm sm:text-base whitespace-pre-wrap">
                 {product.description}
               </p>
             </div>
@@ -183,96 +209,155 @@ export default function ProductDetail() {
             <Separator />
 
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Información del vendedor
-                </CardTitle>
+              <CardHeader className="pb-2">
+                <button
+                  className="flex items-center justify-between w-full text-left"
+                  onClick={() => setShowSellerInfo(!showSellerInfo)}
+                >
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Información del vendedor
+                  </CardTitle>
+                  <div className="lg:hidden">
+                    {showSellerInfo ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </div>
+                </button>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Vendedor</p>
-                    <p className="font-medium">{product.seller_name || "No disponible"}</p>
-                  </div>
-                </div>
 
-                {product.seller_email && (
+              <div
+                className={`overflow-hidden transition-all ${
+                  showSellerInfo ? "max-h-[500px]" : "max-h-0 lg:max-h-none"
+                }`}
+              >
+                <CardContent className="space-y-3 sm:space-y-4 pt-0">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Mail className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <User className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <a
-                        href={`mailto:${product.seller_email}`}
-                        className="font-medium text-primary hover:underline"
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Vendedor
+                      </p>
+                      <p className="font-medium text-sm sm:text-base">
+                        {product.seller_name || "No disponible"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {product.seller_email && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Mail className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Email
+                        </p>
+                        <a
+                          href={`mailto:${product.seller_email}`}
+                          className="font-medium text-primary hover:underline text-sm sm:text-base block truncate"
+                        >
+                          {product.seller_email}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {product.seller_phone && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Phone className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Teléfono
+                        </p>
+                        <a
+                          href={`tel:${product.seller_phone}`}
+                          className="font-medium text-primary hover:underline text-sm sm:text-base"
+                        >
+                          {product.seller_phone}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
+                  {product.seller_address && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <MapPin className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          Dirección
+                        </p>
+                        <p className="font-medium text-sm sm:text-base">
+                          {product.seller_address}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!product.seller_email && !product.seller_phone && (
+                    <p className="text-muted-foreground text-sm">
+                      No hay información de contacto disponible.
+                    </p>
+                  )}
+                </CardContent>
+              </div>
+
+              {(product.seller_email || product.seller_phone) && (
+                <>
+                  <div className="hidden lg:block">
+                    <CardFooter className="flex gap-2 flex-wrap pt-4">
+                      <Button
+                        className="flex-1"
+                        onClick={() => setShowContactDialog(true)}
                       >
-                        {product.seller_email}
-                      </a>
-                    </div>
+                        <Send className="w-4 h-4 mr-2" />
+                        Contactar vendedor
+                      </Button>
+                      {isAuthenticated && (
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setShowReportModal(true)}
+                        >
+                          <Flag className="w-4 h-4 mr-2" />
+                          Reportar
+                        </Button>
+                      )}
+                    </CardFooter>
                   </div>
-                )}
 
-                {product.seller_phone && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Phone className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Teléfono</p>
-                      <a
-                        href={`tel:${product.seller_phone}`}
-                        className="font-medium text-primary hover:underline"
+                  <div className="lg:hidden px-4 pb-4">
+                    <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex gap-2 z-50">
+                      <Button
+                        className="flex-1"
+                        onClick={() => setShowContactDialog(true)}
                       >
-                        {product.seller_phone}
-                      </a>
+                        <Send className="w-4 h-4 mr-2" />
+                        Contactar
+                      </Button>
+                      {isAuthenticated && (
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setShowReportModal(true)}
+                        >
+                          <Flag className="w-4 h-4 mr-2" />
+                          Reportar
+                        </Button>
+                      )}
                     </div>
+                    <div className="h-20" />
                   </div>
-                )}
-
-                {product.seller_address && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Dirección</p>
-                      <p className="font-medium">{product.seller_address}</p>
-                    </div>
-                  </div>
-                )}
-
-                {!product.seller_email && !product.seller_phone && (
-                  <p className="text-muted-foreground text-sm">
-                    No hay información de contacto disponible.
-                  </p>
-                )}
-              </CardContent>
-              <CardFooter className="flex gap-2 flex-wrap">
-                {(product.seller_email || product.seller_phone) && (
-                  <Button
-                    className="flex-1"
-                    onClick={() => setShowContactDialog(true)}
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Contactar vendedor
-                  </Button>
-                )}
-                {isAuthenticated && (
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setShowReportModal(true)}
-                  >
-                    <Flag className="w-4 h-4 mr-2" />
-                    Reportar
-                  </Button>
-                )}
-              </CardFooter>
+                </>
+              )}
             </Card>
           </div>
         </div>

@@ -77,21 +77,22 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4">
+      <div className="absolute inset-0 floating-shapes" />
+      <Card className="w-full max-w-md relative backdrop-blur-sm bg-card/80 dark:bg-card/90 shadow-xl card-hover-lift animate-fade-in-scale">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center">
-              <ShoppingBag className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 dark:from-primary dark:to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+              <ShoppingBag className="w-9 h-9 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Crear cuenta</CardTitle>
-          <CardDescription>Únete a FreeMarket y empieza a vender</CardDescription>
+          <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
+          <CardDescription className="text-muted-foreground">Únete a FreeMarket y empieza a vender</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit} className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <CardContent className="space-y-5 pt-2">
             {error && (
-              <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm">
+              <div className="bg-destructive/10 text-destructive p-4 rounded-xl text-sm border border-destructive/20">
                 {error}
               </div>
             )}
@@ -103,6 +104,7 @@ export default function Register() {
                 placeholder="nombredeusuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                 required
               />
             </div>
@@ -114,6 +116,7 @@ export default function Register() {
                 placeholder="tu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                 required
               />
             </div>
@@ -125,6 +128,7 @@ export default function Register() {
                 placeholder="1234567890"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/30"
               />
             </div>
             <div className="space-y-2">
@@ -138,6 +142,7 @@ export default function Register() {
                 placeholder="Calle, ciudad, provincia..."
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
+                className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/30"
               />
             </div>
             <div className="space-y-2">
@@ -148,18 +153,19 @@ export default function Register() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                 required
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+          <CardFooter className="flex flex-col gap-4 pt-2">
+            <Button type="submit" className="w-full h-11 text-base font-medium" disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {loading ? "Creando cuenta..." : "Registrarse"}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
               ¿Ya tienes cuenta?{" "}
-              <Link to="/login" className="text-primary hover:underline">
+              <Link to="/login" className="text-primary hover:underline font-medium">
                 Inicia sesión
               </Link>
             </p>

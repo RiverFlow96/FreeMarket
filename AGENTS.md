@@ -113,6 +113,72 @@ El modelo de producto incluye un campo `currency` con las siguientes opciones:
   - Constante `CURRENCY_LABELS` para mostrar opciones en formularios
   - Selector de moneda en el formulario de venta (`SellProduct.tsx`)
 
+## Dark/Light Mode
+
+El proyecto implementa un sistema de tema que permite alternar entre modo oscuro y claro:
+
+- **Store de tema:** `frontend/src/store/themeStore.ts` - Usa Zustand con persistencia localStorage
+- **Componente toggle:** `frontend/src/components/ThemeToggle.tsx` - Botón para alternar tema
+- **Persistencia:** El tema se guarda en localStorage y se aplica automáticamente al cargar la app
+- **Inicialización:** Se llama `initializeTheme()` en `main.tsx` antes de renderizar
+
+### Uso
+
+```typescript
+import { useThemeStore } from "@/store/themeStore";
+
+const { theme, toggleTheme } = useThemeStore();
+```
+
+### Implementación CSS
+
+El tema usa las variables CSS de shadcn/ui predefined en `index.css`:
+
+- `:root` define variables en modo claro
+- `.dark` define variables en modo oscuro
+- El toggle agrega/quita la clase `.dark` en `document.documentElement`
+
+## Accordion
+
+El proyecto incluye un componente Accordion basado en Radix UI:
+
+- **Archivo:** `frontend/src/components/ui/accordion.tsx`
+- **Dependencia:** `@radix-ui/react-accordion` (incluido en `radix-ui@1.4.3`)
+
+### Componentes disponibles
+
+- `Accordion` - Contenedor principal (soporta `multiple` y `collapsible`)
+- `AccordionItem` - Cada sección collapsible
+- `AccordionTrigger` - Header clickeable con indicador de expansión
+- `AccordionContent` - Contenido colapsable
+
+### Uso
+
+```tsx
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
+<Accordion type="multiple">
+  <AccordionItem value="item-1">
+    <AccordionTrigger>¿Qué es FreeMarket?</AccordionTrigger>
+    <AccordionContent>Es una plataforma de comercio electrónico...</AccordionContent>
+  </AccordionItem>
+</Accordion>
+```
+
+### Props disponibles
+
+- `type`: "single" | "multiple" - Permite uno o múltiples items abiertos
+- `collapsible`: boolean - Permite cerrar el item cuando es tipo "single"
+- `disabled`: boolean en AccordionTrigger - Deshabilita un item
+- `value`: string - Identificador del item
+
+### Animaciones
+
+Las animaciones CSS están en `index.css`:
+
+- `accordion-up`: Animación de colapso
+- `accordion-down`: Animación de expansión
+
 ## Formulario de venta (Multi-Step)
 
 El formulario de venta (`SellProduct.tsx`) está implementado como un formulario de 4 pasos:
@@ -227,6 +293,19 @@ Ver [README.md](README.md) para un diagrama y detalles de la estructura.
 - Mantener la documentación de la API actualizada
 - Agregar errores al archivo ERRORS_AND_AGENTS.md (no commitear).
 - Ver más en [TODO.md](TODO.md).
+
+## Open Graph y Meta Tags
+
+El proyecto implementa meta tags para SEO y compartir en redes sociales:
+
+- **index.html**: Meta tags base (description, og:*, twitter:*)
+- **ProductDetail.tsx**: Título y meta description dinámicos basados en el producto
+- **favicon.ico**: Icono simple de bolsa de compras en color primary
+- **og-image.png**: Placeholder en frontend/public/ (crear imagen 1200x630 con Canva/Figma)
+
+### Actualizar tras deploy
+
+Reemplazar `https://freemarket.example.com/` con el dominio real en index.html.
 
 ---
 

@@ -1,16 +1,21 @@
 import os
-import uuid
 from django.db import models
 from apps.categories.models import Category
 
 
 def product_image_path(instance, filename):
     ext = os.path.splitext(filename)[1].lower()
-    name = (instance.name or "product").replace(" ", "-")
-    username = instance.seller.username if instance.seller else "user"
-    price = str(instance.price).replace(".", "-") if instance.price else "0"
-    unique_id = uuid.uuid4().hex[:8]
-    return f"products/{name}-{username}-{price}-{unique_id}{ext}"
+
+    if hasattr(instance, "seller"):
+        username = instance.seller.username if instance.seller else "user"
+        product_name = (instance.name or "product").replace(" ", "-")
+        product_id = instance.id or "new"
+        return f"{username}/{product_name}-{product_id}{ext}"
+    else:
+        product = instance.product
+        username = product.seller.username if product.seller else "user"
+        product_name = (product.name or "product").replace(" ", "-")
+        return f"{username}/{product_name}-{instance.id}{ext}"
 
 
 CURRENCY_CHOICES = [
@@ -23,7 +28,7 @@ CURRENCY_CHOICES = [
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="CUP")
     category = models.ForeignKey(
@@ -41,6 +46,16 @@ class Product(models.Model):
         if self.image:
             return self.image.url
         return self.image_url
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(
+        Product, related_name="images", on_delete=models.CASCADE
+    )
+    image = models.ImageField(upload_to=product_image_path)
+
+    def __str__(self):
+        return f"Imagen de {self.product.name}"
 
 
 # class ProductsGroup(models.Model):

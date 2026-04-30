@@ -5,7 +5,7 @@ import { authFetch } from "@/utils/authFetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "@/components/ui/use-toast";
 import { type Currency } from "@/utils/currency";
 import { StepBasicInfo } from "./StepBasicInfo";
 import { StepPrice } from "./StepPrice";
@@ -40,7 +40,6 @@ interface Errors {
   price?: string;
   currency?: string;
   images?: string;
-  terms?: string;
 }
 
 const STEPS = [
@@ -70,7 +69,6 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
     negotiable: false,
     images: [],
   });
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [loading, setLoading] = useState(false);
 
@@ -90,14 +88,8 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
         newErrors.name = "El nombre no puede exceder 100 caracteres";
       }
 
-      if (!formData.description.trim()) {
-        newErrors.description = "La descripción es requerida";
-      } else if (formData.description.length > 1000) {
+      if (formData.description.length > 1000) {
         newErrors.description = "La descripción no puede exceder 1000 caracteres";
-      }
-
-      if (!formData.category) {
-        newErrors.category = "La categoría es requerida";
       }
     }
 
@@ -108,12 +100,6 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
 
       if (!formData.currency) {
         newErrors.currency = "La moneda es requerida";
-      }
-    }
-
-    if (step === 4) {
-      if (!termsAccepted) {
-        newErrors.terms = "Debes aceptar los términos y condiciones";
       }
     }
 
@@ -197,13 +183,21 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
         throw new Error("Producto publicado pero no se pudo obtener la respuesta del servidor.");
       }
 
-      toast.success(`Tu producto "${product.name}" ha sido publicado exitosamente.`);
+      toast({
+        title: "Producto publicado",
+        description: `Tu producto "${product.name}" ha sido publicado exitosamente.`,
+        variant: "success",
+      });
       navigate(`/products/${product.id}`);
     } catch (err) {
       const errorMessage = err instanceof Error
         ? err.message
         : "No se pudo publicar el producto. Por favor, inténtalo de nuevo.";
-      toast.error(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -249,12 +243,12 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-6 pb-24 lg:pb-6">
+      <div className="flex items-center justify-between overflow-x-auto py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
         {STEPS.map((step, index) => (
-          <div key={step.num} className="flex items-center flex-1">
+          <div key={step.num} className="flex items-center flex-1 min-w-0">
             <div
-              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium transition-colors shrink-0 ${
                 step.num === currentStep
                   ? "bg-primary text-primary-foreground"
                   : step.num < currentStep
@@ -265,7 +259,7 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
               {getStepIcon(step.num)}
             </div>
             <span
-              className={`hidden sm:block ml-2 text-sm ${
+              className={`hidden md:block ml-2 text-xs sm:text-sm whitespace-nowrap ${
                 step.num === currentStep ? "font-medium" : "text-muted-foreground"
               }`}
             >
@@ -273,7 +267,7 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
             </span>
             {index < STEPS.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-2 ${
+                className={`flex-1 h-0.5 mx-1 sm:mx-2 min-w-4 ${
                   step.num < currentStep ? "bg-green-500" : "bg-muted"
                 }`}
               />
@@ -284,7 +278,7 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
 
       <Card>
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="text-lg sm:text-xl">
             {currentStep === 1 && "Información básica"}
             {currentStep === 2 && "Precio y moneda"}
             {currentStep === 3 && "Imágenes"}
@@ -333,13 +327,10 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
             <StepReview
               formData={formData}
               onEditStep={handleEditStep}
-              termsAccepted={termsAccepted}
-              onTermsChange={setTermsAccepted}
-              errors={{ terms: errors.terms }}
             />
           )}
 
-          <div className="flex justify-between mt-8 pt-4 border-t">
+          <div className="lg:flex lg:justify-between mt-6 sm:mt-8 pt-4 border-t hidden">
             {currentStep > 1 ? (
               <Button variant="outline" onClick={handleBack} disabled={loading}>
                 <ChevronLeft className="w-4 h-4 mr-2" />
@@ -369,6 +360,42 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
           </div>
         </CardContent>
       </Card>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 lg:hidden z-50">
+        <div className="flex gap-3 max-w-2xl mx-auto">
+          {currentStep > 1 ? (
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={loading}
+              className="flex-1"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Atrás</span>
+            </Button>
+          ) : (
+            <div className="flex-1" />
+          )}
+
+          {currentStep < 4 ? (
+            <Button onClick={handleNext} className="flex-1">
+              Siguiente
+              <ChevronRight className="w-4 h-4 ml-1 sm:ml-2" />
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={loading} className="flex-1">
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span className="hidden sm:inline">Publicando...</span>
+                </>
+              ) : (
+                "Publicar"
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

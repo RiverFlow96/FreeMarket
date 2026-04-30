@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
+import { authFetch } from "@/utils/authFetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import toast from "react-hot-toast";
+import { toast } from "@/components/ui/use-toast";
 import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star, Package } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -27,8 +28,8 @@ export default function Profile() {
   const { accessToken, user } = useAuthStore();
   const navigate = useNavigate();
 
-  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingPlan, setLoadingPlan] = useState(true);
   const [saving, setSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -50,54 +51,44 @@ export default function Profile() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
-  const [loadingPlan, setLoadingPlan] = useState(false);
   const [updatingPlan, setUpdatingPlan] = useState(false);
 
+  const hasFetchedRef = useRef<string | null>(null);
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
+    const timer = setTimeout(() => {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        if (!accessToken) {
+          setLoading(false);
+          setLoadingPlan(false);
+        }
+      }
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 
-
   useEffect(() => {
-    if (accessToken) {
-      const fetchPlanInfo = async () => {
-        setLoadingPlan(true);
-        try {
-          const res = await fetch("/api/v1/products/my_plan/", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setPlanInfo(data);
-          }
-        } catch (err) {
-          console.error("Error fetching plan info:", err);
-        } finally {
-          setLoadingPlan(false);
-        }
-      };
-      fetchPlanInfo();
+    if (!accessToken) {
+      return;
     }
-  }, [accessToken]);
 
-  useEffect(() => {
-    if (!mounted) return;
+    if (hasFetchedRef.current === accessToken) {
+      return;
+    }
+    hasFetchedRef.current = accessToken;
+    isInitialMount.current = false;
 
-    const fetchProfile = async () => {
-      if (!accessToken) {
-        setLoading(false);
-        return;
-      }
+const fetchData = async () => {
       setLoading(true);
+      setLoadingPlan(true);
+
       try {
-        const [profileRes, productsRes] = await Promise.all([
-          fetch("/api/v1/users/profile/", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
-          fetch("/api/v1/users/my_products/", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }),
+        const [profileRes, productsRes, planRes] = await Promise.all([
+          authFetch("/api/v1/users/profile/"),
+          authFetch("/api/v1/users/my_products/"),
+          authFetch("/api/v1/products/my_plan/"),
         ]);
 
         if (profileRes.ok) {
@@ -112,24 +103,28 @@ export default function Profile() {
           const productsData = await productsRes.json();
           setProducts(productsData);
         }
+
+        if (planRes.ok) {
+          const planData = await planRes.json();
+          setPlanInfo(planData);
+        }
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("Error fetching profile data:", err);
       } finally {
         setLoading(false);
+        setLoadingPlan(false);
       }
     };
-    fetchProfile();
-  }, [accessToken, mounted]);
+
+    fetchData();
+  }, [accessToken]);
 
   const saveField = async (field: string, value: string) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/v1/users/profile/", {
+      const res = await authFetch("/api/v1/users/profile/", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [field]: value }),
       });
 
@@ -143,13 +138,25 @@ export default function Profile() {
         } else if (field === "address") {
           setAddress(data.address || "");
         }
-        toast.success(`${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`);
+        toast({
+          title: "Actualizado",
+          description: `${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`,
+          variant: "success",
+        });
       } else {
         const data = await res.json();
-        toast.error(data[field]?.[0] || "Error al actualizar.");
+        toast({
+          title: "Error",
+          description: data[field]?.[0] || "Error al actualizar.",
+          variant: "destructive",
+        });
       }
     } catch {
-      toast.error("Ocurrió un error al actualizar.");
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -190,26 +197,35 @@ export default function Profile() {
     setChangingPassword(true);
 
     try {
-      const res = await fetch("/api/v1/users/change_password/", {
+      const res = await authFetch("/api/v1/users/change_password/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
       });
 
       if (res.ok) {
-        toast.success("Tu contraseña ha sido actualizada exitosamente.");
+        toast({
+          title: "Contraseña actualizada",
+          description: "Tu contraseña ha sido actualizada exitosamente.",
+          variant: "success",
+        });
         setOldPassword("");
         setNewPassword("");
         setShowPasswordForm(false);
       } else {
         const data = await res.json();
-        toast.error(data.old_password?.[0] || "Error al cambiar contraseña.");
+        toast({
+          title: "Error",
+          description: data.old_password?.[0] || "Error al cambiar contraseña.",
+          variant: "destructive",
+        });
       }
     } catch {
-      toast.error("Ocurrió un error al cambiar la contraseña.");
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al cambiar la contraseña.",
+        variant: "destructive",
+      });
     } finally {
       setChangingPassword(false);
     }
@@ -220,42 +236,51 @@ export default function Profile() {
       return;
     }
 
-    if (!accessToken) {
-      toast.error("No tienes sesión activa. Por favor, inicia sesión novamente.");
+if (!accessToken) {
+      toast({
+        title: "Error",
+        description: "No tienes sesión activa. Por favor, inicia sesión nuevamente.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      const res = await fetch(`/api/v1/products/${productId}/delete_product/`, {
+      const res = await authFetch(`/api/v1/products/${productId}/delete_product/`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
       });
 
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== productId));
-        toast.success("El producto ha sido eliminado exitosamente.");
+        toast({
+          title: "Producto eliminado",
+          description: "El producto ha sido eliminado exitosamente.",
+          variant: "success",
+        });
       } else {
         const data = await res.json().catch(() => ({}));
         console.error("Delete product error:", res.status, data);
-        toast.error(data.error || `Error al eliminar producto (${res.status})`);
+        toast({
+          title: "Error",
+          description: data.error || `Error al eliminar producto (${res.status})`,
+          variant: "destructive",
+        });
       }
     } catch {
-      toast.error("Ocurrió un error al eliminar el producto.");
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al eliminar el producto.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleChangePlan = async (newPlan: string) => {
     setUpdatingPlan(true);
     try {
-      const res = await fetch("/api/v1/users/update_plan/", {
+      const res = await authFetch("/api/v1/users/update_plan/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan: newPlan }),
       });
 
@@ -266,13 +291,25 @@ export default function Profile() {
           plan: data.plan,
           product_limit: data.product_limit,
         });
-        toast.success(`Ahora tienes el plan ${data.plan === "plus" ? "Plus" : data.plan === "pro" ? "Pro" : "Gratis"} con límite de ${data.product_limit} productos.`);
+        toast({
+          title: "Plan actualizado",
+          description: `Ahora tienes el plan ${data.plan === "plus" ? "Plus" : data.plan === "pro" ? "Pro" : "Gratis"} con límite de ${data.product_limit} productos.`,
+          variant: "success",
+        });
       } else {
         const data = await res.json();
-        toast.error(data.plan?.[0] || "Error al actualizar el plan.");
+        toast({
+          title: "Error",
+          description: data.plan?.[0] || "Error al actualizar el plan.",
+          variant: "destructive",
+        });
       }
     } catch {
-      toast.error("Ocurrió un error al actualizar el plan.");
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al actualizar el plan.",
+        variant: "destructive",
+      });
     } finally {
       setUpdatingPlan(false);
     }

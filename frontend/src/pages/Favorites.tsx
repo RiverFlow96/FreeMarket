@@ -106,6 +106,19 @@ export default function Favorites() {
     setImageErrors((prev) => new Set(prev).add(productId));
   };
 
+  const retryRef = () => {
+    setLoading(true);
+    loadFavoriteProducts()
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Error al cargar los favoritos");
+        setLoading(false);
+      });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-6">
@@ -120,12 +133,14 @@ export default function Favorites() {
         <h1 className="text-2xl font-bold mb-6">Mis Favoritos</h1>
 
         {loading && (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-muted rounded-lg h-64 animate-pulse" />
+            ))}
           </div>
         )}
 
-        {error && <ErrorState message={error} onRetry={() => loadFavoriteProducts().then(d => {setProducts(d); setLoading(false)}).catch(() => {setError("Error al cargar los favoritos"); setLoading(false)})} />}
+        {error && <ErrorState message={error} onRetry={retryRef} />}
 
         {!loading && products.length === 0 && (
           <EmptyState
@@ -134,7 +149,7 @@ export default function Favorites() {
             description="Guarda productos que te interesen para verlos aquí"
             action={{
               label: "Explorar productos",
-              onClick: () => window.location.href = "/products",
+              onClick: () => (window.location.href = "/products"),
             }}
           />
         )}

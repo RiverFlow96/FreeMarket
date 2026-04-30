@@ -1,4 +1,4 @@
-from .models import Product
+from .models import Product, ProductImage
 from .serializers import ProductSerializer
 from .permissions import IsAdminOrOwner
 from rest_framework import viewsets
@@ -20,10 +20,38 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Product.objects.all()
+            return Product.objects.prefetch_related("images").all()
         if self.request.user.is_authenticated:
-            return Product.objects.all()
-        return Product.objects.all()
+            return Product.objects.prefetch_related("images").all()
+        return Product.objects.prefetch_related("images").all()
+
+    def create(self, request, *args, **kwargs):
+        images = request.FILES.getlist("images")
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.can_add_product:
+            from django.utils.translation import gettext_lazy as _
+
+            raise serializers.ValidationError(
+                {
+                    "error": _(
+                        f"Has alcanzado el límite de {user.product_limit} productos. "
+                        f"Upgradea tu plan para agregar más productos."
+                    )
+                }
+            )
+
+        product = serializer.save(seller=user)
+
+        for image in images:
+            ProductImage.objects.create(product=product, image=image)
+
+        return Response(
+            self.get_serializer(product).data, status=status.HTTP_201_CREATED
+        )
 
     def perform_create(self, serializer):
         user = self.request.user
