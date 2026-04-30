@@ -5,7 +5,7 @@ import { authFetch } from "@/utils/authFetch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "@/components/ui/use-toast";
 import { type Currency } from "@/utils/currency";
 import { StepBasicInfo } from "./StepBasicInfo";
 import { StepPrice } from "./StepPrice";
@@ -189,13 +189,21 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
         throw new Error("Producto publicado pero no se pudo obtener la respuesta del servidor.");
       }
 
-      toast.success(`Tu producto "${product.name}" ha sido publicado exitosamente.`);
+      toast({
+        title: "Producto publicado",
+        description: `Tu producto "${product.name}" ha sido publicado exitosamente.`,
+        variant: "success",
+      });
       navigate(`/products/${product.id}`);
     } catch (err) {
       const errorMessage = err instanceof Error
         ? err.message
         : "No se pudo publicar el producto. Por favor, inténtalo de nuevo.";
-      toast.error(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

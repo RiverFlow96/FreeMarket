@@ -211,6 +211,34 @@ function cleanImageUrl(url: string | null | undefined): string | null {
   }
 }
 
+function ScrollFadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useCallback((node: HTMLDivElement) => {
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`scroll-fade-in ${isVisible ? "visible" : ""}`}
+      style={{ transitionDelay: delay ? `${delay * 0.1}s` : "0s" }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,6 +253,19 @@ export default function ProductsPage() {
   const [maxPrice, setMaxPrice] = useState(2000);
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [showSidebar, setShowSidebar] = useState(true);
+  const [sidebarExiting, setSidebarExiting] = useState(false);
+
+  const toggleSidebar = () => {
+    if (showSidebar) {
+      setSidebarExiting(true);
+      setTimeout(() => {
+        setShowSidebar(false);
+        setSidebarExiting(false);
+      }, 200);
+    } else {
+      setShowSidebar(true);
+    }
+  };
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
@@ -400,7 +441,7 @@ export default function ProductsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowSidebar(!showSidebar)}
+                onClick={toggleSidebar}
                 className="text-muted-foreground hover:text-foreground hidden lg:flex"
                 title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
@@ -477,7 +518,7 @@ export default function ProductsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowSidebar(!showSidebar)}
+                onClick={toggleSidebar}
                 className="lg:hidden text-muted-foreground hover:text-foreground"
                 title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
               >
@@ -516,8 +557,8 @@ export default function ProductsPage() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          {showSidebar && (
-            <aside className="lg:w-64 shrink-0">
+          {(showSidebar || sidebarExiting) && (
+            <aside className={`lg:w-64 shrink-0 ${sidebarExiting ? 'sidebar-animate-exit' : 'sidebar-animate-enter'}`}>
               <div className="lg:sticky lg:top-24 space-y-6">
                 <FilterContent
                   searchQuery={searchQuery}
@@ -590,18 +631,18 @@ export default function ProductsPage() {
                 animateCards ? "animate-cards" : ""
               }`}
             >
-              {filteredProducts.map((product) => {
+              {filteredProducts.map((product, index) => {
                 const cleanedUrl = cleanImageUrl(product.image);
                 const hasError = imageErrors.has(product.id);
                 const showImage = cleanedUrl && !hasError;
                 const isImageLoaded = loadedImages.has(product.id);
 
                 return (
-                  <Link
-                    to={`/products/${product.id}`}
-                    key={product.id}
-                    className="block h-full"
-                  >
+                  <ScrollFadeIn key={product.id} delay={index % 8}>
+                    <Link
+                      to={`/products/${product.id}`}
+                      className="block h-full"
+                    >
                     <Card
                       className={`overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group flex flex-col card-hover-lift ${
                         animateCards ? "product-card-animated" : ""
@@ -677,6 +718,7 @@ export default function ProductsPage() {
                       </div>
                     </Card>
                   </Link>
+                  </ScrollFadeIn>
                 );
               })}
             </div>

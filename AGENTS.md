@@ -138,6 +138,47 @@ El tema usa las variables CSS de shadcn/ui predefined en `index.css`:
 - `.dark` define variables en modo oscuro
 - El toggle agrega/quita la clase `.dark` en `document.documentElement`
 
+## Accordion
+
+El proyecto incluye un componente Accordion basado en Radix UI:
+
+- **Archivo:** `frontend/src/components/ui/accordion.tsx`
+- **Dependencia:** `@radix-ui/react-accordion` (incluido en `radix-ui@1.4.3`)
+
+### Componentes disponibles
+
+- `Accordion` - Contenedor principal (soporta `multiple` y `collapsible`)
+- `AccordionItem` - Cada sección collapsible
+- `AccordionTrigger` - Header clickeable con indicador de expansión
+- `AccordionContent` - Contenido colapsable
+
+### Uso
+
+```tsx
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
+<Accordion type="multiple">
+  <AccordionItem value="item-1">
+    <AccordionTrigger>¿Qué es FreeMarket?</AccordionTrigger>
+    <AccordionContent>Es una plataforma de comercio electrónico...</AccordionContent>
+  </AccordionItem>
+</Accordion>
+```
+
+### Props disponibles
+
+- `type`: "single" | "multiple" - Permite uno o múltiples items abiertos
+- `collapsible`: boolean - Permite cerrar el item cuando es tipo "single"
+- `disabled`: boolean en AccordionTrigger - Deshabilita un item
+- `value`: string - Identificador del item
+
+### Animaciones
+
+Las animaciones CSS están en `index.css`:
+
+- `accordion-up`: Animación de colapso
+- `accordion-down`: Animación de expansión
+
 ## Formulario de venta (Multi-Step)
 
 El formulario de venta (`SellProduct.tsx`) está implementado como un formulario de 4 pasos:
