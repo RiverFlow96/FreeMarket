@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { formatPrice, getCurrencyIcon, type Currency } from "@/utils/currency";
+import { getFavorites, addFavorite, removeFavorite } from "@/utils/favorites";
+import { Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +93,26 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [showSidebar, setShowSidebar] = useState(true);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [localFavorites, setLocalFavorites] = useState<Set<string>>(() =>
+    new Set(getFavorites())
+  );
+
+  const toggleFavorite = (e: React.MouseEvent, productId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const id = String(productId);
+    if (localFavorites.has(id)) {
+      removeFavorite(id);
+      setLocalFavorites((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      addFavorite(id);
+      setLocalFavorites((prev) => new Set(prev).add(id));
+    }
+  };
 
   const params = new URLSearchParams(location.search);
   const query = params.get("q") || "";
@@ -476,6 +498,19 @@ export default function ProductsPage() {
                             <span className="text-xs">Sin imagen</span>
                           </div>
                         )}
+                        <button
+                          onClick={(e) => toggleFavorite(e, product.id)}
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background transition-colors"
+                          aria-label={localFavorites.has(String(product.id)) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                        >
+                          <Heart
+                            className={`w-5 h-5 transition-all ${
+                              localFavorites.has(String(product.id))
+                                ? "fill-red-500 text-red-500"
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        </button>
                       </div>
                       <div className="flex flex-col flex-1 p-3 sm:p-4 pt-0">
                         <CardHeader className="p-0 mb-2">
