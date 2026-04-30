@@ -54,7 +54,7 @@ export function ContactSellerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onClose={() => onOpenChange(false)}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Contactar a {sellerName}</DialogTitle>
           <DialogDescription>
