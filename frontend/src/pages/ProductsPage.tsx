@@ -1,4 +1,4 @@
-import { getApiUrl } from "@/utils/apiUrl";
+import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -182,33 +182,7 @@ function FilterContent({
   );
 }
 
-function cleanImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try {
-    const decoded = decodeURIComponent(url);
-
-    if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
-      return decoded;
-    }
-
-    if (decoded.startsWith("/backend/media/")) {
-      return decoded;
-    }
-
-    if (decoded.startsWith("/media/")) {
-      return decoded;
-    }
-
-    if (decoded.includes("/media/")) {
-      const match = decoded.match(/(\/media\/.+)/);
-      if (match) return match[1];
-    }
-
-    return decoded;
-  } catch {
-    return null;
-  }
-}
+const cleanImageUrl = getMediaUrl;
 
 function ScrollFadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const [isVisible, setIsVisible] = useState(false);

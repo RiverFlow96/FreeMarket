@@ -1,4 +1,4 @@
-import { getApiUrl } from "@/utils/apiUrl";
+import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -44,33 +44,7 @@ interface Product {
   seller_address?: string | null;
 }
 
-function cleanImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try {
-    const decoded = decodeURIComponent(url);
-
-    if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
-      return decoded;
-    }
-
-    if (decoded.startsWith("/backend/media/")) {
-      return decoded;
-    }
-
-    if (decoded.startsWith("/media/")) {
-      return decoded;
-    }
-
-    if (decoded.includes("/media/")) {
-      const match = decoded.match(/(\/media\/.+)/);
-      if (match) return match[1];
-    }
-
-    return decoded;
-  } catch {
-    return null;
-  }
-}
+const cleanImageUrl = getMediaUrl;
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();

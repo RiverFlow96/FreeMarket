@@ -1,4 +1,4 @@
-import { getApiUrl } from "@/utils/apiUrl";
+import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getFavorites, removeFavorite } from "@/utils/favorites";
@@ -24,33 +24,7 @@ interface Product {
   category_name?: string;
 }
 
-function cleanImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
-  try {
-    const decoded = decodeURIComponent(url);
-
-    if (decoded.startsWith("http://") || decoded.startsWith("https://")) {
-      return decoded;
-    }
-
-    if (decoded.startsWith("/backend/media/")) {
-      return decoded;
-    }
-
-    if (decoded.startsWith("/media/")) {
-      return decoded;
-    }
-
-    if (decoded.includes("/media/")) {
-      const match = decoded.match(/(\/media\/.+)/);
-      if (match) return match[1];
-    }
-
-    return decoded;
-  } catch {
-    return null;
-  }
-}
+const cleanImageUrl = getMediaUrl;
 
 async function loadFavoriteProducts(): Promise<Product[]> {
   const favoriteIds = getFavorites();
