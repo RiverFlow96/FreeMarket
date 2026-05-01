@@ -5,7 +5,7 @@ services:
     plan: free
     runtime: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && gunicorn --bind 0.0.0.0:8000 config.wsgi:application
+    startCommand: sh -c "cd backend && python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8000 config.wsgi:application"
     healthCheckPath: /admin/login/
     envVars:
       - key: DEBUG
