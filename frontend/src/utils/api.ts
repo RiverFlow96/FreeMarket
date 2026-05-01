@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://freemarket-backend-p9rs.onrender.com/api/v1';
 const TOKEN_REFRESH_THRESHOLD_MINUTES = 5;
 
 const api = axios.create({
