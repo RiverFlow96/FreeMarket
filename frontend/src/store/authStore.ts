@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -117,7 +118,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const res = await fetch("/api/v1/token/refresh/", {
+          const res = await fetch(getApiUrl("/api/v1/token/refresh/"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ refresh: refreshToken }),

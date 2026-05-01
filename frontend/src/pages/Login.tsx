@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -20,7 +21,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/v1/token/", {
+      const res = await fetch(getApiUrl("/api/v1/token/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -37,7 +38,7 @@ export default function Login() {
 
       const data = await res.json();
 
-      const userRes = await fetch("/api/v1/users/me/", {
+      const userRes = await fetch(getApiUrl("/api/v1/users/me/"), {
         headers: { Authorization: `Bearer ${data.access}` },
       });
 

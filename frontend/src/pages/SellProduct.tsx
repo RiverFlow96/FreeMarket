@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -35,7 +36,7 @@ export default function SellProduct() {
       setLoadingPlan(true);
       try {
         const [categoriesRes, planRes] = await Promise.all([
-          fetch("/api/v1/categories/"),
+          fetch(getApiUrl("/api/v1/categories/")),
           authFetch("/api/v1/products/my_plan/"),
         ]);
 

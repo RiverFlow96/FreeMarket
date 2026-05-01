@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getFavorites, removeFavorite } from "@/utils/favorites";
@@ -56,7 +57,7 @@ async function loadFavoriteProducts(): Promise<Product[]> {
   if (favoriteIds.length === 0) return [];
 
   const productPromises = favoriteIds.map((id) =>
-    fetch(`/api/v1/products/${id}/`).then((res) => {
+    fetch(getApiUrl(`/api/v1/products/${id}/`)).then((res) => {
       if (!res.ok) throw new Error(`Error fetching product ${id}`);
       return res.json();
     })

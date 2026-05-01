@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -303,7 +304,7 @@ export default function ProductsPage() {
       : "/api/v1/products/";
 
     try {
-      const res = await fetch(url);
+      const res = await fetch(getApiUrl(url));
       if (!res.ok) throw new Error("Error al obtener productos");
       const data = await res.json();
       const productsData = Array.isArray(data) ? data : data.results || data;
@@ -355,11 +356,13 @@ export default function ProductsPage() {
     const loadInitialData = async () => {
       try {
         const [categoriesRes, productsRes] = await Promise.all([
-          fetch("/api/v1/categories/"),
+          fetch(getApiUrl("/api/v1/categories/")),
           fetch(
-            query
-              ? `/api/v1/products/search/?search=${encodeURIComponent(query)}`
-              : "/api/v1/products/",
+            getApiUrl(
+              query
+                ? `/api/v1/products/search/?search=${encodeURIComponent(query)}`
+                : "/api/v1/products/"
+            )
           ),
         ]);
 

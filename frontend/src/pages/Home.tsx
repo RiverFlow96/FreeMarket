@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
@@ -88,7 +89,7 @@ export function Home() {
   useEffect(() => {
     const fetchRecentProducts = async () => {
       try {
-        const res = await fetch("/api/v1/products/");
+        const res = await fetch(getApiUrl("/api/v1/products/"));
         if (res.ok) {
           const data = await res.json();
           const productsList = Array.isArray(data) ? data : data.results || data;
