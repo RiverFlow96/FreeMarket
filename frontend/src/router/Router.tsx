@@ -117,6 +117,17 @@ function Navbar() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="w-full justify-start hover:bg-muted"
+                        asChild
+                      >
+                        <Link to="/profile">
+                          <User className="w-4 h-4 mr-2" />
+                          Perfil
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={logout}
                       >

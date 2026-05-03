@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "react-hot-toast"
 import { Flag } from "lucide-react"
 
 const REPORT_REASONS = [
@@ -47,11 +47,7 @@ export function ReportModal({
 
   const handleSubmit = async () => {
     if (!reason) {
-      toast({
-        title: "Error",
-        description: "Por favor selecciona una razón para el reporte",
-        variant: "destructive",
-      })
+      toast.error("Por favor selecciona una razón para el reporte")
       return
     }
 
@@ -77,23 +73,16 @@ export function ReportModal({
         throw new Error(data.detail || "Error al enviar el reporte")
       }
 
-      toast({
-        title: "Reporte enviado",
-        description: "Gracias por tu reporte. Lo revisaremos pronto.",
-        variant: "success",
-      })
+      toast.success("Gracias por tu reporte. Lo revisaremos pronto.");
       setReason("")
       setDescription("")
       onOpenChange(false)
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          error instanceof Error
-            ? error.message
-            : "Error al enviar el reporte. Intenta de nuevo.",
-        variant: "destructive",
-      })
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Error al enviar el reporte. Intenta de nuevo."
+      )
     } finally {
       setIsSubmitting(false)
     }

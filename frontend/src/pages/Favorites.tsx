@@ -1,6 +1,6 @@
 import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getFavorites, removeFavorite } from "@/utils/favorites";
 import { getCurrencyIcon, type Currency } from "@/utils/currency";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ async function loadFavoriteProducts(): Promise<Product[]> {
 }
 
 export default function Favorites() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -98,9 +99,12 @@ export default function Favorites() {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
-          <Link to="/" className="text-muted-foreground hover:text-primary">
-            Inicio
-          </Link>
+          <button
+            onClick={() => navigate(-1)}
+            className="text-muted-foreground hover:text-primary"
+          >
+            Volver
+          </button>
           <span className="text-muted-foreground">/</span>
           <span className="text-foreground">Favoritos</span>
         </div>
