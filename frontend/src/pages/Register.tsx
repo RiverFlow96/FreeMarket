@@ -83,11 +83,11 @@ export default function Register() {
       <Card className="w-full max-w-md relative backdrop-blur-sm bg-card/80 dark:bg-card/90 shadow-xl card-hover-lift animate-fade-in-scale">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
-              <ShoppingBag className="w-9 h-9 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
+              <ShoppingBag className="w-9 h-9 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
+          <CardTitle className="text-3xl font-heading font-bold">Crear cuenta</CardTitle>
           <CardDescription className="text-muted-foreground">Únete a FreeMarket y empieza a vender</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit} className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
