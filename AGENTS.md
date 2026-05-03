@@ -96,10 +96,10 @@ toast({ title: "Done", variant: "success" });
 import { useThemeStore } from "@/store/themeStore";
 const { toggleTheme } = useThemeStore();
 
-// Scroll animations
-import { ScrollFade } from "@/hooks/useScrollAnimation";
+// Scroll animations (extracted to external hooks)
+import { ScrollFade, ScrollFadeIn } from "@/hooks/useScrollAnimation";
 
-// Use the hook for cached product fetching
+// Cached product fetching hook
 import { useProducts } from "@/hooks/useProducts";
 ```
 
@@ -107,3 +107,22 @@ import { useProducts } from "@/hooks/useProducts";
 
 - `ModuleNotFoundError: No module named 'apps'` → Check `INSTALLED_APPS` matches `apps.py` names
 - Media files not loading → Ensure `MEDIA_URL` and `MEDIA_ROOT` are configured in Django
+- CORS errors in development → Use `CORS_ALLOW_ALL_ORIGINS=true` in backend/.env
+
+## Environment
+
+- **Python venv**: `~/Programation/Projects/Ecommerce/.venv` (NOT in backend/)
+- **Activate**: `source ~/Programation/Projects/Ecommerce/.venv/bin/activate`
+- **Backend .env**: Located at `backend/.env` - must contain `CORS_ALLOW_ALL_ORIGINS=true` for local dev
+- **Frontend .env**: Use `VITE_API_URL=http://localhost:8000/api/v1` for local, override for production
+
+## Deployment
+
+- **Backend**: Render.com - requires `CORS_ALLOW_ALL_ORIGINS=true` env var set in dashboard
+- **Frontend**: Vercel - set `VITE_API_URL` to production backend URL in Vercel env vars
+
+## CORS Notes
+
+The frontend's `api.ts` defaults to localhost. For production, ensure:
+1. Backend has `CORS_ALLOW_ALL_ORIGINS=true` (or specific origins in `CORS_ALLOWED_ORIGINS`)
+2. Frontend's VITE_API_URL points to correct backend in production
