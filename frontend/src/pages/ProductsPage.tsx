@@ -37,6 +37,7 @@ import {
   User,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollFadeIn } from "@/hooks/useScrollAnimation.tsx";
 
 interface Product {
   id: number;
@@ -54,6 +55,17 @@ interface Category {
 }
 
 type SortOption = "name-asc" | "name-desc" | "price-asc" | "price-desc";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "name-asc", label: "Nombre (A-Z)" },
+  { value: "name-desc", label: "Nombre (Z-A)" },
+  { value: "price-asc", label: "Precio (menor)" },
+  { value: "price-desc", label: "Precio (mayor)" },
+];
+
+const DEFAULT_PRICE_RANGE: [number, number] = [0, 2000];
+const DEFAULT_SORT: SortOption = "name-asc";
+const DEFAULT_CATEGORY = "all";
 
 interface FilterContentProps {
   searchQuery: string;
@@ -164,10 +176,11 @@ function FilterContent({
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={4}>
-            <SelectItem value="name-asc">Nombre (A-Z)</SelectItem>
-            <SelectItem value="name-desc">Nombre (Z-A)</SelectItem>
-            <SelectItem value="price-asc">Precio (menor)</SelectItem>
-            <SelectItem value="price-desc">Precio (mayor)</SelectItem>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -184,34 +197,6 @@ function FilterContent({
 
 const cleanImageUrl = getMediaUrl;
 
-function ScrollFadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useCallback((node: HTMLDivElement) => {
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`scroll-fade-in ${isVisible ? "visible" : ""}`}
-      style={{ transitionDelay: delay ? `${delay * 0.1}s` : "0s" }}
-    >
-      {children}
-    </div>
-  );
-}
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,14 +206,14 @@ export default function ProductsPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000]);
+  const [selectedCategory, setSelectedCategory] = useState<string>(DEFAULT_CATEGORY);
+  const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_PRICE_RANGE);
   const [maxPrice, setMaxPrice] = useState(2000);
-  const [sortBy, setSortBy] = useState<SortOption>("name-asc");
+  const [sortBy, setSortBy] = useState<SortOption>(DEFAULT_SORT);
   const [showSidebar, setShowSidebar] = useState(true);
   const [sidebarExiting, setSidebarExiting] = useState(false);
 
-  const toggleSidebar = () => {
+  const toggleSidebar = useCallback(() => {
     if (showSidebar) {
       setSidebarExiting(true);
       setTimeout(() => {
@@ -238,17 +223,15 @@ export default function ProductsPage() {
     } else {
       setShowSidebar(true);
     }
-  };
+  }, [showSidebar]);
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-  const [localFavorites, setLocalFavorites] = useState<Set<string>>(() =>
-    new Set(getFavorites())
-  );
+  const [imageErrors, setImageErrors] = useState<Set<number>>(() => new Set());
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(() => new Set());
+  const [localFavorites, setLocalFavorites] = useState<Set<string>>(() => new Set(getFavorites()));
   const [animateCards, setAnimateCards] = useState(false);
   const [animatingHeart, setAnimatingHeart] = useState<number | null>(null);
 
-  const toggleFavorite = (e: React.MouseEvent, productId: number) => {
+  const toggleFavorite = useCallback((e: React.MouseEvent, productId: number) => {
     e.preventDefault();
     e.stopPropagation();
     const id = String(productId);
@@ -261,11 +244,15 @@ export default function ProductsPage() {
       });
     } else {
       addFavorite(id);
-      setLocalFavorites((prev) => new Set(prev).add(id));
+      setLocalFavorites((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
     }
     setAnimatingHeart(productId);
     setTimeout(() => setAnimatingHeart(null), 300);
-  };
+  }, [localFavorites]);
 
   const params = new URLSearchParams(location.search);
   const query = params.get("q") || "";
@@ -273,15 +260,22 @@ export default function ProductsPage() {
   const fetchProducts = useCallback(async (searchTerm: string) => {
     setLoading(true);
     setError("");
-    const url = searchTerm
-      ? `/api/v1/products/search/?search=${encodeURIComponent(searchTerm)}`
+    const params = new URLSearchParams();
+    if (searchTerm) {
+      params.set('search', searchTerm);
+    }
+    const queryString = params.toString();
+    const url = queryString
+      ? `/api/v1/products/?${queryString}`
       : "/api/v1/products/";
 
     try {
       const res = await fetch(getApiUrl(url));
       if (!res.ok) throw new Error("Error al obtener productos");
       const data = await res.json();
-      const productsData = Array.isArray(data) ? data : data.results || data;
+      const productsData = Array.isArray(data)
+        ? data
+        : data.results || data.data || [];
       setProducts(productsData);
 
       if (productsData.length > 0) {
@@ -291,63 +285,63 @@ export default function ProductsPage() {
         setPriceRange([0, max]);
       }
     } catch {
-      setError("No se konnten cargar los productos.");
+      setError("No se pudieron cargar los productos.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    const sortFn = (a: Product, b: Product) => {
+      switch (sortBy) {
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        default:
+          return 0;
+      }
+    };
 
-    if (selectedCategory !== "all") {
-      result = result.filter((p) => p.category_name === selectedCategory);
-    }
+    const categoryFilter = selectedCategory !== DEFAULT_CATEGORY
+      ? (p: Product) => p.category_name === selectedCategory
+      : () => true;
 
-    result = result.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1],
-    );
+    const priceFilter = (p: Product) =>
+      p.price >= priceRange[0] && p.price <= priceRange[1];
 
-    switch (sortBy) {
-      case "name-asc":
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "name-desc":
-        result.sort((a, b) => b.name.localeCompare(a.name));
-        break;
-      case "price-asc":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        result.sort((a, b) => b.price - a.price);
-        break;
-    }
-
-    return result;
+    return [...products]
+      .filter((p) => categoryFilter(p) && priceFilter(p))
+      .sort(sortFn);
   }, [products, selectedCategory, priceRange, sortBy]);
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        const categoryParams = new URLSearchParams();
+        const productParams = new URLSearchParams();
+
+        if (query) {
+          productParams.set('search', query);
+        }
+
         const [categoriesRes, productsRes] = await Promise.all([
-          fetch(getApiUrl("/api/v1/categories/")),
-          fetch(
-            getApiUrl(
-              query
-                ? `/api/v1/products/search/?search=${encodeURIComponent(query)}`
-                : "/api/v1/products/"
-            )
-          ),
+          fetch(getApiUrl(`/api/v1/categories/?${categoryParams.toString()}`)),
+          fetch(getApiUrl(`/api/v1/products/?${productParams.toString()}`)),
         ]);
 
         const categoriesData = await categoriesRes.json();
-        setCategories(categoriesData.results || categoriesData);
+        setCategories(categoriesData.results || categoriesData.data || categoriesData);
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
           const productsList = Array.isArray(productsData)
             ? productsData
-            : productsData.results || productsData;
+            : productsData.results || productsData.data || [];
           setProducts(productsList);
 
           if (productsList.length > 0) {
@@ -371,39 +365,47 @@ export default function ProductsPage() {
     loadInitialData();
   }, [query]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     const newUrl = searchQuery
       ? `/products?q=${encodeURIComponent(searchQuery)}`
       : "/products";
     navigate(newUrl);
     fetchProducts(searchQuery);
-  };
+  }, [searchQuery, navigate, fetchProducts]);
 
-  const handleImageError = (productId: number) => {
-    setImageErrors((prev) => new Set(prev).add(productId));
-  };
+  const handleImageError = useCallback((productId: number) => {
+    setImageErrors((prev) => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
+  }, []);
 
-  const handleImageLoad = (productId: number) => {
-    setLoadedImages((prev) => new Set(prev).add(productId));
-  };
+  const handleImageLoad = useCallback((productId: number) => {
+    setLoadedImages((prev) => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
+  }, []);
 
-  const clearFilters = () => {
-    setSelectedCategory("all");
-    setSortBy("name-asc");
+  const clearFilters = useCallback(() => {
+    setSelectedCategory(DEFAULT_CATEGORY);
+    setSortBy(DEFAULT_SORT);
     setPriceRange([0, maxPrice]);
     setSearchQuery("");
     navigate("/products");
     fetchProducts("");
-  };
+  }, [maxPrice, navigate, fetchProducts]);
 
-  const activeFiltersCount = () => {
+  const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (query) count++;
-    if (selectedCategory !== "all") count++;
+    if (selectedCategory !== DEFAULT_CATEGORY) count++;
     if (priceRange[0] > 0 || priceRange[1] < maxPrice) count++;
     return count;
-  };
+  }, [query, selectedCategory, priceRange, maxPrice]);
 
   const { isAuthenticated } = useAuthStore();
 
@@ -434,9 +436,9 @@ export default function ProductsPage() {
               >
                 <Filter className="w-4 h-4" />
                 Filtros
-                {activeFiltersCount() > 0 && (
+                {activeFiltersCount > 0 && (
                   <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
-                    {activeFiltersCount()}
+                    {activeFiltersCount}
                   </Badge>
                 )}
               </Button>
@@ -508,7 +510,7 @@ export default function ProductsPage() {
                   categories={categories}
                   onSearch={handleSearch}
                   onClearFilters={clearFilters}
-                  activeFiltersCount={activeFiltersCount()}
+                  activeFiltersCount={activeFiltersCount}
                 />
               </div>
             </aside>
@@ -689,15 +691,15 @@ export default function ProductsPage() {
             categories={categories}
             onSearch={handleSearch}
             onClearFilters={clearFilters}
-            activeFiltersCount={activeFiltersCount()}
-            onSubmit={() => setShowFiltersMobile(false)}
-          />
-          <Button
-            className="w-full mt-4"
-            onClick={() => setShowFiltersMobile(false)}
-          >
-            Aplicar filtros
-          </Button>
+activeFiltersCount={activeFiltersCount}
+                onSubmit={() => setShowFiltersMobile(false)}
+              />
+              <Button
+                className="w-full mt-4"
+                onClick={() => setShowFiltersMobile(false)}
+              >
+                Aplicar filtros
+              </Button>
         </DialogContent>
       </Dialog>
     </div>

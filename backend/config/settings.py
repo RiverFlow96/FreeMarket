@@ -78,12 +78,27 @@ DATABASE_URL = config("DATABASE_URL", default=None)
 
 if DATABASE_URL:
     import dj_database_url
+    from urllib.parse import urlsplit
 
-    DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL, conn_max_age=600, ssl_require=True
-        )
-    }
+    try:
+        # Validate URL format before parsing
+        parsed = urlsplit(DATABASE_URL)
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError("Invalid DATABASE_URL format")
+
+        DATABASES = {
+            "default": dj_database_url.parse(
+                DATABASE_URL, conn_max_age=600, ssl_require=True
+            )
+        }
+    except Exception as e:
+        print(f"Warning: DATABASE_URL inválido ({e}). Usando SQLite.")
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
+        }
 else:
     DATABASES = {
         "default": {
@@ -135,6 +150,10 @@ CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
     default="http://localhost:8080,http://127.0.0.1:9000,http://localhost:5173,http://127.0.0.1:5173",
 ).split(",")
+
+CORS_ALLOW_ALL_ORIGINS = (
+    config("CORS_ALLOW_ALL_ORIGINS", default="false").lower() == "true"
+)
 
 # Optional Methods
 # CORS_ALLOW_METHODS = (
