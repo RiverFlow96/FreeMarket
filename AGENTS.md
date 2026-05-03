@@ -7,6 +7,7 @@
 npm install && npm run lint && npm run build   # verify changes
 
 # Backend (always from backend/ directory)
+source ~/Programation/Projects/Ecommerce/.venv/bin/activate  # venv is at project root
 python manage.py check                         # verify Django config
 python manage.py makemigrations && migrate    # after model changes
 python manage.py runserver                     # dev server on :8000
@@ -126,3 +127,28 @@ import { useProducts } from "@/hooks/useProducts";
 The frontend's `api.ts` defaults to localhost. For production, ensure:
 1. Backend has `CORS_ALLOW_ALL_ORIGINS=true` (or specific origins in `CORS_ALLOWED_ORIGINS`)
 2. Frontend's VITE_API_URL points to correct backend in production
+
+## SEO Deploy Checklist
+
+Before deploying to production, update these files with the real domain:
+
+```bash
+# Files to update with real domain (freemarket.example.com → yourdomain.com)
+frontend/public/robots.txt          # Sitemap URL
+frontend/public/sitemap.xml          # All <loc> URLs
+frontend/index.html                   # canonical, og:url, og:image, schema
+```
+
+## Dev Server Ports
+
+- Frontend: `http://localhost:5173` (or 5174 if busy)
+- Backend: `http://localhost:8000`
+
+## Pre-commit Issues
+
+If `git commit` hangs on pre-commit, check for stale lock:
+```bash
+rm ~/.cache/pre-commit/.lock
+```
+
+First commit after adding new hooks takes longer (downloads environments).
