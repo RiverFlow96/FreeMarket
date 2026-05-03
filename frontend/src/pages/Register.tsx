@@ -83,7 +83,7 @@ export default function Register() {
       <Card className="w-full max-w-md relative backdrop-blur-sm bg-card/80 dark:bg-card/90 shadow-xl card-hover-lift animate-fade-in-scale">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 dark:from-primary dark:to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
               <ShoppingBag className="w-9 h-9 text-white" />
             </div>
           </div>
