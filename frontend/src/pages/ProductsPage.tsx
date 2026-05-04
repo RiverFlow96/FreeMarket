@@ -154,12 +154,41 @@ function FilterContent({
           min={0}
           max={maxPrice || 5000}
           step={maxPrice > 1000 ? 100 : 50}
-          className="mb-3"
+          className="mb-4"
         />
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>{formatPrice(priceRange[0])}</span>
-          <span>{formatPrice(priceRange[1])}</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Mínimo</label>
+            <Input
+              type="number"
+              value={priceRange[0]}
+              onChange={(e) => {
+                const val = Math.max(0, Math.min(Number(e.target.value), priceRange[1] - 1));
+                setPriceRange([val, priceRange[1]]);
+              }}
+              min={0}
+              max={priceRange[1] - 1}
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Máximo</label>
+            <Input
+              type="number"
+              value={priceRange[1]}
+              onChange={(e) => {
+                const val = Math.max(priceRange[0] + 1, Number(e.target.value));
+                setPriceRange([priceRange[0], val]);
+              }}
+              min={priceRange[0] + 1}
+              max={maxPrice || 5000}
+              className="h-9 text-sm"
+            />
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          <strong>Nota:</strong> El máximo se ajusta al precio más alto de los productos disponibles ({maxPrice ? formatPrice(maxPrice) : "5000 €"})
+        </p>
       </div>
 
       <Separator />
@@ -446,7 +475,7 @@ export default function ProductsPage() {
       <main className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/home")}
             className="text-muted-foreground hover:text-primary"
           >
             Volver

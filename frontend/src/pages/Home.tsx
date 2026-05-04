@@ -2,13 +2,15 @@ import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
-import { ShoppingBag, Package, Users, Shield, ArrowRight } from "lucide-react";
+import { ShoppingBag, Package, Users, Shield, ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { useAuthStore } from "@/store/authStore";
 import { getCurrencyIcon, type Currency } from "@/utils/currency";
-import { ScrollFade } from "@/hooks/useScrollAnimation.tsx";
+import { ScrollFade, ScrollFadeIn } from "@/hooks/useScrollAnimation.tsx";
+import { getFavorites, addFavorite, removeFavorite } from "@/utils/favorites";
 
 interface Product {
   id: number;
@@ -17,6 +19,7 @@ interface Product {
   price: number;
   currency?: string;
   image?: string | null;
+  category_name?: string;
 }
 
 const cleanImageUrl = getMediaUrl;
@@ -27,6 +30,34 @@ export function Home() {
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState<Set<number>>(() => new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(() => new Set(getFavorites()));
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(() => new Set());
+  const [animatingHeart, setAnimatingHeart] = useState<number | null>(null);
+
+  const toggleFavorite = useCallback((productId: number) => {
+    const id = String(productId);
+    if (favorites.has(id)) {
+      removeFavorite(id);
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    } else {
+      addFavorite(id);
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        next.add(id);
+        return next;
+      });
+      setAnimatingHeart(productId);
+      setTimeout(() => setAnimatingHeart(null), 300);
+    }
+  }, [favorites]);
+
+  const handleImageLoad = useCallback((productId: number) => {
+    setLoadedImages((prev) => new Set(prev).add(productId));
+  }, []);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -170,38 +201,60 @@ export function Home() {
                   const cleanedUrl = cleanImageUrl(product.image);
                   const hasError = imageErrors.has(product.id);
                   const showImage = cleanedUrl && !hasError;
+                  const isImageLoaded = loadedImages.has(product.id);
                   return (
-                    <ScrollFade delay={index + 1} key={product.id}>
-                      <Link to={`/products/${product.id}`} className="block">
-                        <Card className="w-56 sm:w-64 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 group flex flex-col bg-card ring-1 ring-foreground/10 hover:ring-primary/30">
+                    <ScrollFadeIn key={product.id} delay={index}>
+                      <Link to={`/products/${product.id}`} className="block h-full w-48 sm:w-52 md:w-56 lg:w-60 shrink-0">
+                        <Card className={`overflow-hidden transition-all hover:shadow-md sm:hover:shadow-lg h-full group flex flex-col card-hover-lift`}>
                           <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
                             {showImage ? (
-                              <img src={cleanedUrl} alt={product.name} className="object-cover w-full h-full transition-transform group-hover:scale-105" onError={() => handleImageError(product.id)} loading="lazy" />
+                              <img
+                                src={cleanedUrl}
+                                alt={product.name}
+                                className={`object-cover w-full h-full transition-transform group-hover:scale-105 ${isImageLoaded ? "animate-image-fade-in" : ""}`}
+                                onLoad={() => handleImageLoad(product.id)}
+                                onError={() => handleImageError(product.id)}
+                                loading="lazy"
+                              />
                             ) : (
-                              <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50">
-                                <ShoppingBag className="w-16 h-16" />
+                              <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground/50 animate-image-fade-in">
+                                <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16" />
                                 <span className="text-xs">Sin imagen</span>
                               </div>
                             )}
-                            <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-primary/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <span className="text-primary-foreground text-xs">→</span>
-                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                toggleFavorite(product.id);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background transition-colors"
+                              aria-label={favorites.has(String(product.id)) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                            >
+                              <Heart className={`w-5 h-5 transition-all ${favorites.has(String(product.id)) ? "fill-red-500 text-red-500" : "text-muted-foreground"} ${animatingHeart === product.id ? "animate-heart-pulse" : ""}`} />
+                            </button>
                           </div>
-                          <div className="flex flex-col flex-1 p-4 pt-3">
-                            <CardHeader className="p-0 mb-1">
-                              <CardTitle className="text-base font-heading font-medium line-clamp-1 text-card-foreground">{product.name}</CardTitle>
+                          <div className="flex flex-col flex-1 p-3 sm:p-4 pt-0">
+                            <CardHeader className="p-0 mb-2">
+                              <CardTitle className="text-sm sm:text-base line-clamp-1 text-card-foreground">{product.name}</CardTitle>
+                              {product.category_name && (
+                                <Badge variant="secondary" className="mt-1 w-fit text-xs">
+                                  {product.category_name}
+                                </Badge>
+                              )}
                             </CardHeader>
-                            <CardDescription className="text-sm line-clamp-2 text-muted-foreground">{product.description}</CardDescription>
-                            <div className="mt-3 pt-3 border-t border-border/30">
-                              <span className="font-serif text-2xl font-normal text-primary">
-                                <span className="text-sm mr-0.5 opacity-70">{getCurrencyIcon(product.currency as Currency)}</span>
+                            <div className="flex-1">
+                              <CardDescription className="text-xs sm:text-sm line-clamp-2 text-muted-foreground">{product.description}</CardDescription>
+                            </div>
+                            <div className="flex items-center justify-between w-full mt-3">
+                              <span className="text-lg sm:text-xl font-bold text-primary">
+                                <span className="text-sm mr-1">{getCurrencyIcon(product.currency as Currency)}</span>
                                 {product.price}
                               </span>
                             </div>
                           </div>
                         </Card>
                       </Link>
-                    </ScrollFade>
+                    </ScrollFadeIn>
                   );
                 })}
               </div>
@@ -294,7 +347,7 @@ export function Home() {
             </h2>
           </ScrollFade>
           <ScrollFade delay={1}>
-            <p className="text-muted-foreground mb-10 max-w-lg mx-auto text-lg font-serif italic">
+            <p className="text-muted-foreground mb-10 max-w-lg mx-auto text-lg">
               Empieza a comprar y vender productos hoy mismo
             </p>
           </ScrollFade>
@@ -356,8 +409,8 @@ export function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm shadow-primary/10">
-                <ShoppingBag className="w-5 h-5 text-primary-foreground" />
+              <div className="p-1.5 rounded-lg bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">
+                <ShoppingBag className="w-5 h-5" />
               </div>
               <span className="font-bold text-lg text-card-foreground">FreeMarket</span>
             </div>
