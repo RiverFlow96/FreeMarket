@@ -85,7 +85,7 @@ export function Home() {
                 <span className="text-sm font-medium text-muted-foreground tracking-widest uppercase">Marketplace</span>
               </div>
               
-              <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-foreground tracking-tight leading-[1.1]">
+              <h1 className="font-heading text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-foreground tracking-tight leading-[1.1]">
                 Free<span className="text-primary">Market</span>
               </h1>
               
