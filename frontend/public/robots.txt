@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://freemarket.example.com/sitemap.xml
+Sitemap: https://freemarket-7vy.pages.dev/
