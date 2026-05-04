@@ -1,6 +1,6 @@
 import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -15,6 +15,7 @@ import {
   Flag,
   ChevronUp,
   ChevronDown,
+  Pencil,
 } from "lucide-react";
 import {
   Card,
@@ -27,8 +28,14 @@ import { formatPrice, type Currency } from "@/utils/currency";
 import { SkeletonProductDetail } from "@/components/ui/SkeletonProductDetail";
 import { ContactSellerDialog } from "@/components/ContactSellerDialog";
 import { ReportModal } from "@/components/ReportModal";
+import { EditProductModal } from "@/components/EditProductModal";
 import { useAuthStore } from "@/store/authStore";
 import { ErrorState } from "@/components/ui/ErrorState";
+
+interface ProductImage {
+  id: number;
+  image: string;
+}
 
 interface Product {
   id: number;
@@ -37,7 +44,10 @@ interface Product {
   price: number;
   currency?: string;
   image?: string | null;
+  images?: ProductImage[];
+  category?: number | null;
   category_name?: string;
+  seller_id?: number;
   seller_name?: string;
   seller_email?: string;
   seller_phone?: number | null;
@@ -48,14 +58,18 @@ const cleanImageUrl = getMediaUrl;
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState(false);
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showSellerInfo, setShowSellerInfo] = useState(true);
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+
+  const isOwner = user && product && user.id === product.seller_id;
 
   const retryRef = useCallback(() => {
     if (!id) return;
@@ -85,6 +99,15 @@ export default function ProductDetail() {
         setLoading(false);
       });
   }, [id]);
+
+  const handleProductUpdated = useCallback((updatedProduct: Product) => {
+    setProduct(updatedProduct);
+    document.title = `${updatedProduct.name} | FreeMarket`;
+  }, []);
+
+  const handleProductDeleted = useCallback(() => {
+    navigate("/products");
+  }, [navigate]);
 
   useEffect(() => {
     const timer = setTimeout(retryRef, 0);
@@ -128,13 +151,26 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
-          <Link
-            to="/products"
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Volver a productos</span>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link
+              to="/products"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Volver a productos</span>
+            </Link>
+            {isOwner && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEditModal(true)}
+                className="gap-2"
+              >
+                <Pencil className="w-4 h-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -352,6 +388,14 @@ export default function ProductDetail() {
         onOpenChange={setShowReportModal}
         productId={product.id}
         productName={product.name}
+      />
+
+      <EditProductModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        product={product}
+        onProductUpdated={handleProductUpdated}
+        onProductDeleted={handleProductDeleted}
       />
     </div>
   );

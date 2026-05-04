@@ -186,3 +186,13 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 AUTH_USER_MODEL = "users.User"
+
+# JWT Settings - Extended access token lifetime for development
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),  # 24 hours instead of 5 min
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # 7 days instead of 24 hours
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+}

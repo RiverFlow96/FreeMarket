@@ -3,11 +3,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import permissions
+from django.utils import timezone
 
-from apps.products.models import Product
+from apps.products.models import Product, GRACE_PERIOD_HOURS
 from apps.products.serializers import ProductSerializer
 
-from .models import User
+from .models import User, NotificationPreference
 from .serializers import (
     UserSerializer,
     UserCreateSerializer,
@@ -98,6 +99,14 @@ class UserViewSet(viewsets.ModelViewSet):
                 user.phone = request.data["phone"]
             if "address" in request.data:
                 user.address = request.data["address"]
+            if "notification_preference" in request.data:
+                if (
+                    request.data["notification_preference"]
+                    in NotificationPreference.values
+                ):
+                    user.notification_preference = request.data[
+                        "notification_preference"
+                    ]
             user.save()
             return Response(
                 {
@@ -233,6 +242,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     "data": {
                         "plan": user.plan,
                         "product_limit": user.product_limit,
+                        "product_duration_weeks": user.product_duration_weeks,
                     },
                 }
             )

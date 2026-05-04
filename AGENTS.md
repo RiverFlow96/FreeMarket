@@ -1,154 +1,79 @@
 # FreeMarket - Ecommerce Project
 
-## Essential Commands
+## Commands (verify changes)
 
 ```bash
 # Frontend (always from frontend/ directory)
-npm install && npm run lint && npm run build   # verify changes
+npm install && npm run lint && npm run build
 
-# Backend (always from backend/ directory)
-source ~/Programation/Projects/Ecommerce/.venv/bin/activate  # venv is at project root
-python manage.py check                         # verify Django config
-python manage.py makemigrations && migrate    # after model changes
-python manage.py runserver                     # dev server on :8000
+# Backend (activate venv at PROJECT ROOT, NOT in backend/)
+source ~/Programation/Projects/Ecommerce/.venv/bin/activate
+python manage.py check
+python manage.py makemigrations && migrate
+python manage.py runserver
 ```
-
-## Project Structure
-
-- **Backend**: Django REST API in `backend/` - apps in `backend/apps/`
-- **Frontend**: React + Vite + TypeScript in `frontend/`
-- **API prefix**: `/api/v1/`
-- **Vite proxy**: `/api` → `localhost:8000`
 
 ## Critical Conventions
 
-- Django imports use `apps.<appname>` path, not `backend.apps`
-- `apps.py` names must match `INSTALLED_APPS` exactly
-- Use relative config paths (e.g., `config`, not `backend.config`)
-- Commit messages: `type(area): description` (Conventional Commits)
-- Always update AGENTS.md when adding new conventions
+- **Django apps**: Use `apps.<name>` path, NOT `backend.apps`
+- **apps.py**: `name` must match `INSTALLED_APPS` exactly
+- **Config paths**: Use relative paths (e.g., `config`, not `backend.config`)
+- **Commit format**: `type(area): description` (Conventional Commits)
 
-## API Endpoints
+## Tech Stack
 
-| Endpoint | Auth | Description |
-|----------|------|-------------|
-| `GET /api/v1/products/` | Any | List products (paginated) |
-| `POST /api/v1/products/` | JWT | Create product |
-| `GET /api/v1/products/{id}/` | Any | Product detail |
-| `PUT/PATCH /api/v1/products/{id}/` | JWT | Update product |
-| `DELETE /api/v1/products/{id}/` | JWT | Delete product |
-| `GET /api/v1/products/me/products/` | JWT | User's products |
-| `GET /api/v1/products/me/plan/` | JWT | User's plan info |
-| `GET /api/v1/categories/` | Any | List categories |
-| `GET /api/v1/users/me/` | JWT | Current user profile |
-| `PUT /api/v1/users/me/` | JWT | Update profile |
-| `POST /api/v1/users/me/password/` | JWT | Change password |
-| `GET /api/v1/users/me/products/` | JWT | User's products |
-| `POST /api/v1/users/update_plan/` | JWT | Update plan |
-| `GET /api/v1/reports/` | JWT | List user's reports |
-| `POST /api/v1/reports/` | JWT | Create report |
-| `/api/v1/token/` | - | Obtain tokens |
-| `/api/v1/token/refresh/` | - | Refresh token |
-
-### Query Params (all paginated endpoints)
-
-- `?page=1` - Page number (default: 1)
-- `?page_size=20` - Items per page (max: 100)
-- `?search=term` - Search filter (products only)
-- `?category=name` - Filter by category
-- `?min_price=X` / `?max_price=X` - Price range
-- `?sort=price_asc|price_desc|name_asc|name_desc` - Sorting
-
-### Response Format
-
-All responses follow this structure:
-
-```json
-{
-  "success": true,
-  "data": [...],
-  "pagination": {
-    "total": 100,
-    "page": 1,
-    "page_size": 20,
-    "pages": 5
-  }
-}
-```
-
-Error responses:
-
-```json
-{
-  "success": false,
-  "error": "Error message",
-  "errors": {...}
-}
-```
-
-## Useful Patterns
-
-```typescript
-// Toast notifications
-import { toast } from "@/components/ui/use-toast";
-toast({ title: "Done", variant: "success" });
-
-// Theme toggle
-import { useThemeStore } from "@/store/themeStore";
-const { toggleTheme } = useThemeStore();
-
-// Scroll animations (extracted to external hooks)
-import { ScrollFade, ScrollFadeIn } from "@/hooks/useScrollAnimation";
-
-// Cached product fetching hook
-import { useProducts } from "@/hooks/useProducts";
-```
-
-## Common Issues
-
-- `ModuleNotFoundError: No module named 'apps'` → Check `INSTALLED_APPS` matches `apps.py` names
-- Media files not loading → Ensure `MEDIA_URL` and `MEDIA_ROOT` are configured in Django
-- CORS errors in development → Use `CORS_ALLOW_ALL_ORIGINS=true` in backend/.env
+- **Backend**: Django 6.0 + DRF + JWT (djangorestframework-simplejwt)
+- **Frontend**: React 19 + Vite + TypeScript + Tailwind 4
+- **Path alias**: `@` → `./src` (defined in vite.config.ts)
+- **Vite proxy**: `/api` and `/media` → `localhost:8000`
+- **Apps**: users, categories, products, reports, utils
 
 ## Environment
 
-- **Python venv**: `~/Programation/Projects/Ecommerce/.venv` (NOT in backend/)
-- **Activate**: `source ~/Programation/Projects/Ecommerce/.venv/bin/activate`
-- **Backend .env**: Located at `backend/.env` - must contain `CORS_ALLOW_ALL_ORIGINS=true` for local dev
-- **Frontend .env**: Use `VITE_API_URL=http://localhost:8000/api/v1` for local, override for production
+| Variable | Location | Required |
+|----------|----------|----------|
+| `CORS_ALLOW_ALL_ORIGINS=true` | `backend/.env` | Local dev |
+| `VITE_API_URL` | Frontend env | Production |
 
-## Deployment
+## API Response Format
 
-- **Backend**: Render.com - requires `CORS_ALLOW_ALL_ORIGINS=true` env var set in dashboard
-- **Frontend**: Vercel - set `VITE_API_URL` to production backend URL in Vercel env vars
+```json
+{ "success": true, "data": [...], "pagination": { "total": 100, "page": 1, "page_size": 20, "pages": 5 } }
+```
+Error: `{ "success": false, "error": "message", "errors": {...} }`
 
-## CORS Notes
+## Common Issues
 
-The frontend's `api.ts` defaults to localhost. For production, ensure:
-1. Backend has `CORS_ALLOW_ALL_ORIGINS=true` (or specific origins in `CORS_ALLOWED_ORIGINS`)
-2. Frontend's VITE_API_URL points to correct backend in production
+| Error | Fix |
+|-------|-----|
+| `ModuleNotFoundError: No module named 'apps'` | Check `INSTALLED_APPS` matches `apps.py` names |
+| CORS errors | Add `CORS_ALLOW_ALL_ORIGINS=true` to backend/.env |
+
+## Pre-commit
+
+- First run downloads environments (slow)
+- Frontend lint: `npm run lint --prefix frontend` (always use --prefix from project root)
+- If hangs: `rm ~/.cache/pre-commit/.lock`
+
+## Testing
+
+```bash
+# Backend tests
+python manage.py test
+```
 
 ## SEO Deploy Checklist
 
-Before deploying to production, update these files with the real domain:
+Update with real domain before production:
+- `frontend/public/robots.txt` (sitemap URL)
+- `frontend/public/sitemap.xml` (all `<loc>` URLs)
+- `frontend/index.html` (canonical, og:url, og:image, schema)
 
-```bash
-# Files to update with real domain (freemarket.example.com → yourdomain.com)
-frontend/public/robots.txt          # Sitemap URL
-frontend/public/sitemap.xml          # All <loc> URLs
-frontend/index.html                   # canonical, og:url, og:image, schema
-```
-
-## Dev Server Ports
+## Dev Ports
 
 - Frontend: `http://localhost:5173` (or 5174 if busy)
 - Backend: `http://localhost:8000`
 
-## Pre-commit Issues
+## See Also
 
-If `git commit` hangs on pre-commit, check for stale lock:
-```bash
-rm ~/.cache/pre-commit/.lock
-```
-
-First commit after adding new hooks takes longer (downloads environments).
+- `TODO.md` - Project roadmap and future features
