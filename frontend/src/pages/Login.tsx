@@ -63,11 +63,11 @@ export default function Login() {
       <Card className="w-full max-w-md relative backdrop-blur-sm bg-card/80 dark:bg-card/90 shadow-xl card-hover-lift animate-fade-in-scale">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 dark:from-primary dark:to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
-              <ShoppingBag className="w-9 h-9 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
+              <ShoppingBag className="w-9 h-9 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Iniciar sesión</CardTitle>
+          <CardTitle className="text-3xl font-heading font-bold">Iniciar sesión</CardTitle>
           <CardDescription className="text-muted-foreground">Ingresa a tu cuenta para continuar</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit} className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>

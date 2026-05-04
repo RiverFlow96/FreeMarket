@@ -49,13 +49,13 @@ function Navbar() {
   }, []);
 
   return (
-    <nav className="border-b bg-gradient-to-r from-background to-muted/30 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+    <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-2.5 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight group">
-          <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="p-1.5 rounded-lg bg-primary text-primary-foreground group-hover:bg-primary/90 transition-colors">
             <ShoppingBag className="w-5 h-5" />
           </div>
-          <span className="hidden sm:inline bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          <span className="hidden sm:inline font-heading font-bold text-xl tracking-tight text-foreground">
             FreeMarket
           </span>
         </Link>
@@ -85,7 +85,7 @@ function Navbar() {
                 variant="default"
                 size="sm"
                 asChild
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm"
+                className="bg-primary hover:bg-primary/90 shadow-sm"
               >
                 <Link to="/sell">
                   <PlusCircle className="w-4 h-4 mr-1.5" />
@@ -98,7 +98,7 @@ function Navbar() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-muted/60 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                     <User className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-sm font-medium hidden lg:inline">
@@ -114,6 +114,17 @@ function Navbar() {
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                     <div className="p-1.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start hover:bg-muted"
+                        asChild
+                      >
+                        <Link to="/profile">
+                          <User className="w-4 h-4 mr-2" />
+                          Perfil
+                        </Link>
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -136,7 +147,7 @@ function Navbar() {
               <Button
                 size="sm"
                 asChild
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-sm"
+                className="bg-primary hover:bg-primary/90 shadow-sm"
               >
                 <Link to="/register">Registrarse</Link>
               </Button>
@@ -183,7 +194,7 @@ function Navbar() {
                   variant="default"
                   size="sm"
                   asChild
-                  className="justify-start bg-gradient-to-r from-primary to-primary/80 shadow-sm"
+                  className="justify-start bg-primary shadow-sm"
                   onClick={closeMobileMenu}
                 >
                   <NavLink to="/sell">
@@ -194,7 +205,7 @@ function Navbar() {
 
                 <div className="flex items-center justify-between py-3 border-t mt-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center">
                       <User className="w-4 h-4 text-primary" />
                     </div>
                     <div>
@@ -222,7 +233,7 @@ function Navbar() {
                 <Button
                   size="sm"
                   asChild
-                  className="justify-start bg-gradient-to-r from-primary to-primary/80 shadow-sm"
+                  className="justify-start bg-primary shadow-sm"
                   onClick={closeMobileMenu}
                 >
                   <Link to="/register">Registrarse</Link>

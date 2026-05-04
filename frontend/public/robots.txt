@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://freemarket-7vy.pages.dev/
