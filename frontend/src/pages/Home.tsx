@@ -94,9 +94,9 @@ export function Home() {
               </p>
               
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-sm text-muted-foreground font-serif italic">Desde 2026</span>
+                <span className="text-sm text-muted-foreground">Desde 2026</span>
                 <span className="w-1 h-1 rounded-full bg-primary/50" />
-                <span className="text-sm text-muted-foreground font-serif italic">Comunidad activa</span>
+                <span className="text-sm text-muted-foreground">Comunidad activa</span>
               </div>
             </div>
           </ScrollFade>
@@ -143,7 +143,7 @@ export function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
           <span className="text-xs text-muted-foreground font-medium tracking-wider uppercase">Descubrir</span>
           <div className="w-6 h-10 rounded-full border border-border flex justify-center pt-2">
             <div className="w-1 h-2 bg-muted-foreground/50 rounded-full animate-bounce" />
