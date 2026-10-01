@@ -1,5 +1,5 @@
 import Router from "./router/Router";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (

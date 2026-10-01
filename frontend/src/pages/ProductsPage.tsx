@@ -1,7 +1,6 @@
 import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/store/authStore";
 import { formatPrice, getCurrencyIcon, type Currency } from "@/utils/currency";
 import { getFavorites, addFavorite, removeFavorite } from "@/utils/favorites";
 import { Heart } from "lucide-react";
@@ -34,7 +33,6 @@ import {
   Package,
   PanelLeftClose,
   PanelLeft,
-  User,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollFadeIn } from "@/hooks/useScrollAnimation.tsx";
@@ -397,7 +395,7 @@ export default function ProductsPage() {
     setSearchQuery("");
     navigate("/products");
     fetchProducts("");
-  }, [maxPrice, navigate, fetchProducts]);
+}, [maxPrice, navigate, fetchProducts]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -406,8 +404,6 @@ export default function ProductsPage() {
     if (priceRange[0] > 0 || priceRange[1] < maxPrice) count++;
     return count;
   }, [query, selectedCategory, priceRange, maxPrice]);
-
-  const { isAuthenticated } = useAuthStore();
 
   return (
     <div className="min-h-screen bg-background">
@@ -432,7 +428,7 @@ export default function ProductsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFiltersMobile(true)}
-                className="lg:hidden flex items-center gap-2"
+                className="lg:hidden flex items-center gap-2 bg-card"
               >
                 <Filter className="w-4 h-4" />
                 Filtros
@@ -442,42 +438,19 @@ export default function ProductsPage() {
                   </Badge>
                 )}
               </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              {isAuthenticated && (
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/profile">
-                    <User className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">Perfil</span>
-                  </Link>
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="lg:hidden"
-                title={showSidebar ? "Ocultar filtros" : "Mostrar filtros"}
-              >
-                {showSidebar ? (
-                  <PanelLeftClose className="w-5 h-5" />
-                ) : (
-                  <PanelLeft className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
+</div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-2 mb-6 text-sm flex-wrap">
-          <Link
-            to="/home"
+          <button
+            onClick={() => navigate(-1)}
             className="text-muted-foreground hover:text-primary"
           >
-            Inicio
-          </Link>
+            Volver
+          </button>
           <span className="text-muted-foreground">/</span>
           <Link
             to="/products"
@@ -495,7 +468,7 @@ export default function ProductsPage() {
 
         <div className="flex flex-col lg:flex-row gap-6">
           {(showSidebar || sidebarExiting) && (
-            <aside className={`lg:w-64 shrink-0 ${sidebarExiting ? 'sidebar-animate-exit' : 'sidebar-animate-enter'}`}>
+            <aside className={`hidden lg:block lg:w-64 shrink-0 ${sidebarExiting ? 'sidebar-animate-exit' : 'sidebar-animate-enter'}`}>
               <div className="lg:sticky lg:top-24 space-y-6">
                 <FilterContent
                   searchQuery={searchQuery}
@@ -667,17 +640,7 @@ export default function ProductsPage() {
         open={showFiltersMobile}
         onOpenChange={setShowFiltersMobile}
       >
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Filtros</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowFiltersMobile(false)}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+<DialogContent className="max-h-[80vh] overflow-y-auto bg-card">
           <FilterContent
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -691,15 +654,15 @@ export default function ProductsPage() {
             categories={categories}
             onSearch={handleSearch}
             onClearFilters={clearFilters}
-activeFiltersCount={activeFiltersCount}
-                onSubmit={() => setShowFiltersMobile(false)}
-              />
-              <Button
-                className="w-full mt-4"
-                onClick={() => setShowFiltersMobile(false)}
-              >
-                Aplicar filtros
-              </Button>
+            activeFiltersCount={activeFiltersCount}
+            onSubmit={() => setShowFiltersMobile(false)}
+          />
+          <Button
+            className="w-full mt-4"
+            onClick={() => setShowFiltersMobile(false)}
+          >
+            Aplicar filtros
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

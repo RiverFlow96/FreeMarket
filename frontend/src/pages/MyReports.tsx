@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { reportsApi, type Report } from "@/api/reports";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Flag, AlertTriangle, Clock, CheckCircle, XCircle, ShoppingBag } from "lucide-react";
+import { Flag, AlertTriangle, Clock, CheckCircle, XCircle, ShoppingBag, ArrowLeft } from "lucide-react";
 
 const REASON_LABELS: Record<string, string> = {
   inapropiated: "Contenido inapropiado",
@@ -28,6 +28,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 };
 
 export default function MyReports() {
+  const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -70,6 +71,13 @@ export default function MyReports() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 py-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver
+          </button>
           <h1 className="text-2xl font-bold">Mis Reportes</h1>
           <p className="text-muted-foreground">
             Historial de reportes enviados

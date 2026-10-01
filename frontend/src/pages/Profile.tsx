@@ -5,7 +5,7 @@ import { authFetch } from "@/utils/authFetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "react-hot-toast";
 import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star, Package } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -86,8 +86,8 @@ const fetchData = async () => {
 
       try {
         const [profileRes, productsRes, planRes] = await Promise.all([
-          authFetch("/api/v1/users/profile/"),
-          authFetch("/api/v1/users/my_products/"),
+          authFetch("/api/v1/users/me/"),
+          authFetch("/api/v1/users/me/products/"),
           authFetch("/api/v1/products/my_plan/"),
         ]);
 
@@ -101,12 +101,12 @@ const fetchData = async () => {
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          setProducts(productsData);
+          setProducts(productsData.data);
         }
 
         if (planRes.ok) {
           const planData = await planRes.json();
-          setPlanInfo(planData);
+          setPlanInfo(planData.data);
         }
       } catch (err) {
         console.error("Error fetching profile data:", err);
@@ -122,7 +122,7 @@ const fetchData = async () => {
   const saveField = async (field: string, value: string) => {
     setSaving(true);
     try {
-      const res = await authFetch("/api/v1/users/profile/", {
+      const res = await authFetch("/api/v1/users/me/", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [field]: value }),
@@ -138,25 +138,13 @@ const fetchData = async () => {
         } else if (field === "address") {
           setAddress(data.address || "");
         }
-        toast({
-          title: "Actualizado",
-          description: `${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`,
-          variant: "success",
-        });
+        toast.success(`${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`);
       } else {
         const data = await res.json();
-        toast({
-          title: "Error",
-          description: data[field]?.[0] || "Error al actualizar.",
-          variant: "destructive",
-        });
+        toast.error(data[field]?.[0] || "Error al actualizar.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al actualizar.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al actualizar.");
     } finally {
       setSaving(false);
     }
@@ -204,28 +192,16 @@ const fetchData = async () => {
       });
 
       if (res.ok) {
-        toast({
-          title: "Contraseña actualizada",
-          description: "Tu contraseña ha sido actualizada exitosamente.",
-          variant: "success",
-        });
+        toast.success("Tu contraseña ha sido actualizada exitosamente.");
         setOldPassword("");
         setNewPassword("");
         setShowPasswordForm(false);
       } else {
         const data = await res.json();
-        toast({
-          title: "Error",
-          description: data.old_password?.[0] || "Error al cambiar contraseña.",
-          variant: "destructive",
-        });
+        toast.error(data.old_password?.[0] || "Error al cambiar contraseña.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al cambiar la contraseña.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al cambiar la contraseña.");
     } finally {
       setChangingPassword(false);
     }
@@ -237,41 +213,25 @@ const fetchData = async () => {
     }
 
 if (!accessToken) {
-      toast({
-        title: "Error",
-        description: "No tienes sesión activa. Por favor, inicia sesión nuevamente.",
-        variant: "destructive",
-      });
+      toast.error("No tienes sesión activa. Por favor, inicia sesión nuevamente.");
       return;
     }
 
     try {
-      const res = await authFetch(`/api/v1/products/${productId}/delete_product/`, {
+      const res = await authFetch(`/api/v1/products/${productId}/`, {
         method: "DELETE",
       });
 
       if (res.ok) {
         setProducts(products.filter((p) => p.id !== productId));
-        toast({
-          title: "Producto eliminado",
-          description: "El producto ha sido eliminado exitosamente.",
-          variant: "success",
-        });
+        toast.success("El producto ha sido eliminado exitosamente.");
       } else {
         const data = await res.json().catch(() => ({}));
         console.error("Delete product error:", res.status, data);
-        toast({
-          title: "Error",
-          description: data.error || `Error al eliminar producto (${res.status})`,
-          variant: "destructive",
-        });
+        toast.error(data.error || `Error al eliminar producto (${res.status})`);
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al eliminar el producto.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al eliminar el producto.");
     }
   };
 
@@ -286,30 +246,21 @@ if (!accessToken) {
 
       if (res.ok) {
         const data = await res.json();
+        const newPlan = data.data.plan;
+        const newLimit = data.data.product_limit;
         setPlanInfo({
           ...planInfo!,
-          plan: data.plan,
-          product_limit: data.product_limit,
+          plan: newPlan,
+          product_limit: newLimit,
+          product_count: planInfo!.product_count,
         });
-        toast({
-          title: "Plan actualizado",
-          description: `Ahora tienes el plan ${data.plan === "plus" ? "Plus" : data.plan === "pro" ? "Pro" : "Gratis"} con límite de ${data.product_limit} productos.`,
-          variant: "success",
-        });
+        toast.success(`Ahora tienes el plan ${newPlan === "plus" ? "Plus" : newPlan === "pro" ? "Pro" : "Gratis"} con límite de ${newLimit} productos.`);
       } else {
         const data = await res.json();
-        toast({
-          title: "Error",
-          description: data.plan?.[0] || "Error al actualizar el plan.",
-          variant: "destructive",
-        });
+        toast.error(data.plan?.[0] || "Error al actualizar el plan.");
       }
     } catch {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al actualizar el plan.",
-        variant: "destructive",
-      });
+      toast.error("Ocurrió un error al actualizar el plan.");
     } finally {
       setUpdatingPlan(false);
     }
@@ -479,36 +430,45 @@ if (!accessToken) {
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      variant={planInfo.plan === "free" ? "default" : "outline"}
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => handleChangePlan("free")}
                       disabled={updatingPlan || planInfo.plan === "free"}
-                      className={planInfo.plan === "free" ? "" : "opacity-60"}
+                      className={`h-7 px-2.5 rounded-[calc(var(--radius-md)-2px)] text-[0.8rem] font-medium flex items-center justify-center gap-1 transition-all ${
+                        planInfo.plan === "free"
+                          ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                          : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                      } ${updatingPlan || planInfo.plan === "free" ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      <Star className="w-4 h-4 mr-1" />
+                      <Star className={`w-3.5 h-3.5 ${planInfo.plan === "free" ? "text-white" : "text-gray-500"}`} />
                       Gratis
-                    </Button>
-                    <Button
-                      variant={planInfo.plan === "plus" ? "default" : "outline"}
-                      size="sm"
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleChangePlan("plus")}
                       disabled={updatingPlan || planInfo.plan === "plus"}
-                      className={planInfo.plan === "plus" ? "" : "opacity-60"}
+                      className={`h-7 px-2.5 rounded-[calc(var(--radius-md)-2px)] text-[0.8rem] font-medium flex items-center justify-center gap-1 transition-all ${
+                        planInfo.plan === "plus"
+                          ? "bg-blue-500 text-white hover:bg-blue-600"
+                          : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                      } ${updatingPlan || planInfo.plan === "plus" ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      <Zap className="w-4 h-4 mr-1" />
+                      <Zap className={`w-3.5 h-3.5 ${planInfo.plan === "plus" ? "text-white" : "text-blue-500"}`} />
                       Plus
-                    </Button>
-                    <Button
-                      variant={planInfo.plan === "pro" ? "default" : "outline"}
-                      size="sm"
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleChangePlan("pro")}
                       disabled={updatingPlan || planInfo.plan === "pro"}
-                      className={planInfo.plan === "pro" ? "" : "opacity-60"}
+                      className={`h-7 px-2.5 rounded-[calc(var(--radius-md)-2px)] text-[0.8rem] font-medium flex items-center justify-center gap-1 transition-all ${
+                        planInfo.plan === "pro"
+                          ? "bg-amber-500 text-white hover:bg-amber-600"
+                          : "border border-gray-300 text-gray-600 hover:bg-gray-100"
+                      } ${updatingPlan || planInfo.plan === "pro" ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      <Crown className="w-4 h-4 mr-1" />
+                      <Crown className={`w-3.5 h-3.5 ${planInfo.plan === "pro" ? "text-white" : "text-amber-500"}`} />
                       Pro
-                    </Button>
+                    </button>
                   </div>
 
                   <div className="text-xs text-muted-foreground text-center">

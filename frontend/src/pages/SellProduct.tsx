@@ -45,7 +45,7 @@ export default function SellProduct() {
 
         if (planRes.ok) {
           const planData = await planRes.json();
-          setPlanInfo(planData);
+          setPlanInfo(planData.success ? planData.data : planData);
         }
       } catch (err) {
         console.error("Error fetching data:", err);
