@@ -1,0 +1,9 @@
+name = "freemarket"
+type = "javascript"
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+
+[env.production]
+vars = { VITE_API_URL = "https://freemarket-backend-p9rs.onrender.com/api/v1" }
