@@ -19,12 +19,12 @@ export function SearchBar() {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Buscar productos, categorías..."
-        className="flex-1 px-5 py-3 rounded-full border-2 border-input bg-background text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 text-lg"
+        placeholder="Buscar..."
+        className="flex-1 min-w-0 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full border-2 border-input bg-background text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 text-base sm:text-lg"
       />
       <button
         type="submit"
-        className="ml-2 px-5 py-3 rounded-full bg-primary text-primary-foreground hover:bg-primary/80 font-semibold transition-colors"
+        className="shrink-0 px-3 py-2.5 sm:px-5 sm:py-3 rounded-full bg-primary text-primary-foreground hover:bg-primary/80 font-semibold transition-colors"
         aria-label="Buscar"
       >
         <svg
@@ -33,7 +33,7 @@ export function SearchBar() {
           viewBox="0 0 24 24"
           strokeWidth={2}
           stroke="currentColor"
-          className="w-6 h-6"
+          className="w-5 h-5 sm:w-6 sm:h-6"
         >
           <path
             strokeLinecap="round"
