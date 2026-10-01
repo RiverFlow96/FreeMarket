@@ -17,6 +17,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: freemarket-db
+          property: connectionString
       - key: CORS_ALLOWED_ORIGINS
         value: https://your-project.pages.cloudflare.dev
       - key: PYTHONUNBUFFERED
@@ -26,5 +27,3 @@ databases:
   - name: freemarket-db
     plan: free
     region: oregon
-    databaseName: postgres
-    postgresMajorVersion: "15"
