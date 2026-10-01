@@ -16,9 +16,10 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from drf_spectacular.views import SpectacularSwaggerView, SpectacularAPIView
 
 # Viewsets
@@ -61,6 +62,8 @@ urlpatterns = [
     # JWT Urls
     path("api/v1/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/v1/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # Serve media files regardless of DEBUG setting (for simple deployment like Render)
+    re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
 ]
 
 if settings.DEBUG:
