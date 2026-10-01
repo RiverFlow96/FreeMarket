@@ -1,5 +1,5 @@
 import { getApiUrl, getMediaUrl } from "@/utils/apiUrl";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchBar } from "../components/SearchBar";
 import { ShoppingBag, Package, Users, Shield, ArrowRight } from "lucide-react";
@@ -8,6 +8,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { SkeletonList } from "@/components/ui/SkeletonList";
 import { useAuthStore } from "@/store/authStore";
 import { getCurrencyIcon, type Currency } from "@/utils/currency";
+import { ScrollFade } from "@/hooks/useScrollAnimation.tsx";
 
 interface Product {
   id: number;
@@ -20,72 +21,49 @@ interface Product {
 
 const cleanImageUrl = getMediaUrl;
 
-function ScrollFade({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(element);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`scroll-fade-in ${isVisible ? "visible" : ""}`}
-      style={{ transitionDelay: delay ? `${delay * 0.1}s` : "0s" }}
-    >
-      {children}
-    </div>
-  );
-}
-
 export function Home() {
   const { isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [imageErrors, setImageErrors] = useState<Set<number>>(() => new Set());
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate("/");
-  };
+  }, [logout, navigate]);
 
-  useEffect(() => {
-    const fetchRecentProducts = async () => {
-      try {
-        const res = await fetch(getApiUrl("/api/v1/products/"));
-        if (res.ok) {
-          const data = await res.json();
-          const productsList = Array.isArray(data) ? data : data.results || data;
-          setRecentProducts(productsList.slice(0, 8));
-        }
-      } catch (err) {
-        console.error("Error fetching recent products:", err);
-      } finally {
-        setLoading(false);
+  const fetchRecentProducts = useCallback(async () => {
+    try {
+      const res = await fetch(getApiUrl("/api/v1/products/?page_size=8"));
+      if (res.ok) {
+        const data = await res.json();
+        const productsList = Array.isArray(data)
+          ? data
+          : data.results || data.data || [];
+        setRecentProducts(productsList.slice(0, 8));
       }
-    };
-    fetchRecentProducts();
+    } catch (err) {
+      console.error("Error fetching recent products:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleImageError = (productId: number) => {
-    setImageErrors((prev) => new Set(prev).add(productId));
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchRecentProducts();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchRecentProducts]);
+
+  const handleImageError = useCallback((productId: number) => {
+    setImageErrors((prev) => {
+      const next = new Set(prev);
+      next.add(productId);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="min-h-screen w-full">

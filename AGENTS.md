@@ -1,312 +1,109 @@
-## Convenciones de búsqueda y productos
+# FreeMarket - Ecommerce Project
 
-- La barra de búsqueda en la página de inicio redirige a `/products?q=...`.
-- La página de productos (`/products`) consume la API REST de Django (`/api/v1/products/`) y muestra los productos según el término de búsqueda.
-- El endpoint de productos es público (`AllowAny`) para permitir visualización sin autenticación.
-- Los endpoints de creación/edición/eliminación requieren autenticación (`IsAuthenticated`).
+## Essential Commands
 
-## Filtros en página de productos
+```bash
+# Frontend (always from frontend/ directory)
+npm install && npm run lint && npm run build   # verify changes
 
-La página `/products` incluye filtros avanzados:
-
-- **Búsqueda:** Por nombre de producto
-- **Categoría:** Filtro por categoría (usa API `/api/v1/categories/`)
-- **Precio:** Rango de precio con slider (0-5000 ARS)
-- **Ordenamiento:** Por nombre (A-Z, Z-A) o precio (menor, mayor)
-- Los filtros se aplican en tiempo real en el frontend
-
-## Toast Notifications
-
-El proyecto usa un sistema de Toast personalizado basado en shadcn/ui:
-
-- **Archivos creados:**
-  - `frontend/src/components/ui/use-toast.ts` - Hook para mostrar toasts
-  - `frontend/src/components/ui/toast.tsx` - Componente Toast
-  - `frontend/src/components/ui/toaster.tsx` - Contenedor de toasts
-- **Uso en componentes:**
-
-  ```typescript
-  import { toast } from "@/components/ui/use-toast";
-
-  toast({
-    title: "Título",
-    description: "Descripción",
-    variant: "success" | "destructive" | "default",
-  });
-  ```
-
-- **Variantes disponibles:** default, destructive, success
-- El Toaster debe estar incluido en App.tsx: `<Toaster />`
-
-## Información del vendedor
-
-En los detalles del producto (`ProductDetail.tsx`) se muestra:
-
-- Nombre del vendedor
-- Email
-- Teléfono (si el vendedor lo agregó)
-- Dirección (si el vendedor la agregó)
-- Botones para enviar mensaje o llamar
-
-El modelo de usuario tiene campos:
-
-- `phone`: Número de teléfono (opcional)
-- `address`: Dirección (opcional)
-
-## Archivos media
-
-Las imágenes de productos se sirven desde `backend/media/`. En desarrollo, Django sirve estos archivos automáticamente.
-
-## Registro de usuarios
-
-El formulario de registro (`Register.tsx`) incluye:
-
-- Usuario, email, contraseña (requeridos)
-- Teléfono (opcional)
-- Dirección (opcional)
-
-## Notas de desarrollo
-
-- Ejecutar `python manage.py migrate` para agregar el campo `address` a la base de datos
-- El proxy de Vite reenvía `/api` a `localhost:8000`
-
-## Planes de usuario y límites de productos
-
-El modelo de usuario incluye un campo `plan` con tres opciones:
-
-- **free**: Límite de 3 productos (valor por defecto)
-- **plus**: Límite de 5 productos
-- **pro**: Límite de 10 productos
-
-### Endpoints relacionados
-
-- `GET /api/v1/products/my_plan/` - Devuelve el plan actual, límite, cantidad de productos y si puede agregar más
-- `POST /api/v1/users/update_plan/` - Actualiza el plan del usuario (requiere autenticación)
-
-### Campos adicionales en serializadores de usuario
-
-Los serializadores `UserSerializer` y `UserProfileSerializer` incluyen:
-
-- `plan`: Plan actual del usuario
-- `product_limit`: Límite de productos según el plan
-- `product_count`: Cantidad de productos publicados
-- `can_add_product`: Booleano que indica si puede agregar más productos
-
-### Validación en creación de productos
-
-Al intentar crear un producto, el backend valida si el usuario ha alcanzado su límite y devuelve un error 400 si corresponde.
-
-## Monedas disponibles
-
-El modelo de producto incluye un campo `currency` con las siguientes opciones:
-
-- **CUP**: Peso Cubano (valor por defecto)
-- **MLC**: Peso Convertible
-- **USD**: Dólar Estadounidense
-- **EUR**: Euro
-
-### Implementación
-
-- **Backend**: Campo `currency` en el modelo `Product` con choices predefined
-- **Frontend**:
-  - Utility `formatPrice(price, currency)` en `frontend/src/utils/currency.ts`
-  - Constante `CURRENCY_LABELS` para mostrar opciones en formularios
-  - Selector de moneda en el formulario de venta (`SellProduct.tsx`)
-
-## Dark/Light Mode
-
-El proyecto implementa un sistema de tema que permite alternar entre modo oscuro y claro:
-
-- **Store de tema:** `frontend/src/store/themeStore.ts` - Usa Zustand con persistencia localStorage
-- **Componente toggle:** `frontend/src/components/ThemeToggle.tsx` - Botón para alternar tema
-- **Persistencia:** El tema se guarda en localStorage y se aplica automáticamente al cargar la app
-- **Inicialización:** Se llama `initializeTheme()` en `main.tsx` antes de renderizar
-
-### Uso
-
-```typescript
-import { useThemeStore } from "@/store/themeStore";
-
-const { theme, toggleTheme } = useThemeStore();
+# Backend (always from backend/ directory)
+python manage.py check                         # verify Django config
+python manage.py makemigrations && migrate    # after model changes
+python manage.py runserver                     # dev server on :8000
 ```
 
-### Implementación CSS
+## Project Structure
 
-El tema usa las variables CSS de shadcn/ui predefined en `index.css`:
+- **Backend**: Django REST API in `backend/` - apps in `backend/apps/`
+- **Frontend**: React + Vite + TypeScript in `frontend/`
+- **API prefix**: `/api/v1/`
+- **Vite proxy**: `/api` → `localhost:8000`
 
-- `:root` define variables en modo claro
-- `.dark` define variables en modo oscuro
-- El toggle agrega/quita la clase `.dark` en `document.documentElement`
+## Critical Conventions
 
-## Accordion
-
-El proyecto incluye un componente Accordion basado en Radix UI:
-
-- **Archivo:** `frontend/src/components/ui/accordion.tsx`
-- **Dependencia:** `@radix-ui/react-accordion` (incluido en `radix-ui@1.4.3`)
-
-### Componentes disponibles
-
-- `Accordion` - Contenedor principal (soporta `multiple` y `collapsible`)
-- `AccordionItem` - Cada sección collapsible
-- `AccordionTrigger` - Header clickeable con indicador de expansión
-- `AccordionContent` - Contenido colapsable
-
-### Uso
-
-```tsx
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-
-<Accordion type="multiple">
-  <AccordionItem value="item-1">
-    <AccordionTrigger>¿Qué es FreeMarket?</AccordionTrigger>
-    <AccordionContent>Es una plataforma de comercio electrónico...</AccordionContent>
-  </AccordionItem>
-</Accordion>
-```
-
-### Props disponibles
-
-- `type`: "single" | "multiple" - Permite uno o múltiples items abiertos
-- `collapsible`: boolean - Permite cerrar el item cuando es tipo "single"
-- `disabled`: boolean en AccordionTrigger - Deshabilita un item
-- `value`: string - Identificador del item
-
-### Animaciones
-
-Las animaciones CSS están en `index.css`:
-
-- `accordion-up`: Animación de colapso
-- `accordion-down`: Animación de expansión
-
-## Formulario de venta (Multi-Step)
-
-El formulario de venta (`SellProduct.tsx`) está implementado como un formulario de 4 pasos:
-
-### Estructura de componentes
-
-- `frontend/src/components/sell/MultiStepForm.tsx` - Componente principal que maneja el estado global del formulario
-- `frontend/src/components/sell/StepBasicInfo.tsx` - Paso 1: Nombre, descripción, categoría
-- `frontend/src/components/sell/StepPrice.tsx` - Paso 2: Precio, moneda, precio negociable
-- `frontend/src/components/sell/StepImages.tsx` - Paso 3: Subida de imágenes (máx 5, formatos: jpg, png, webp)
-- `frontend/src/components/sell/StepReview.tsx` - Paso 4: Revisión y términos
-
-### Características
-
-- Validación por paso antes de avanzar
-- Persistencia de datos entre pasos
-- Navegación con indicadores visuales (1, 2, 3, 4)
-- Uso de FormData para envío de imágenes múltiples
-- Toast de éxito/error después de crear el producto
-- Redirección a página del producto después de crear
-
-### API
-
-- POST `/api/v1/products/` con `Content-Type: multipart/form-data`
-- Body: name, description, category, price, currency, negotiable, images[]
-
-# AI Coding Agent Instructions for FreeMarket (Ecommerce)
-
----
-
-## Reglas permanentes para agentes y commits
-
-- **Actualización obligatoria de AGENTS.md:**
-  - Siempre que realices un cambio en el proyecto, actualiza este archivo para reflejar nuevas convenciones, reglas o prácticas.
-  - Si agregas una nueva convención, documenta el cambio aquí antes de finalizar la tarea.
-  - Si olvidas actualizar AGENTS.md, considera la tarea incompleta.
-- **Commits en formato Conventional Commits:**
-  - Todos los mensajes de commit deben seguir el estándar Conventional Commits (https://www.conventionalcommits.org/):
-    - Estructura: &lt;tipo&gt;(&lt;área&gt;): &lt;descripción&gt;
-    - Tipos válidos: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
-    - El área debe ser el módulo, carpeta o funcionalidad afectada (ej: frontend, backend, products, users, docker, etc).
-    - La descripción debe ser breve y en imperativo.
-    - Ejemplo: feat(frontend): mejora landing de búsqueda
-    - Ejemplo: fix(backend): corrige error en serializador de productos
-    - Ejemplo: docs(AGENTS): agrega regla de actualización de convenciones
-
-This file provides essential guidance for AI coding agents working in this repository. It summarizes conventions, build/test commands, and project structure to help agents be immediately productive. For more details, see the [README.md](README.md).
-
----
-
-## Project Overview
-
-- **Backend:** Django 6+ (REST API)
-- **Frontend:** React (Vite, TypeScript)
-
-## Key Conventions
-
-- All backend commands must be run from the `backend/` directory.
-- Django apps are in `backend/apps/` and use the `apps.<appname>` import path.
-- The `name` in each `apps.py` must match the import path in `INSTALLED_APPS`.
-- Use relative imports and configuration paths (not `backend.config`, just `config`).
-- For frontend, use Vite scripts from the `frontend/` directory.
-
-## Build & Test Commands
-
-### Backend (Django)
-
-- **Instalar dependencias:** `pip install -r backend/requirements.txt` o `pip install -r backend/requeriments.txt`
-- **Servidor de desarrollo:** `cd backend && python manage.py runserver`
-- **Migraciones:** `cd backend && python manage.py makemigrations && python manage.py migrate`
-- **Crear superusuario:** `cd backend && python manage.py createsuperuser`
-- **Check project:** `cd backend && python manage.py check`
-
-### Frontend (React + Vite)
-
-- **Instalar dependencias:** `cd frontend && npm install` (o `bun i` si usas Bun)
-- **Desarrollo:** `cd frontend && npm run dev`
-- **Build:** `cd frontend && npm run build`
-- **Lint:** `cd frontend && npm run lint`
-
-## Docker
-
-- Usa el `Dockerfile` para producción y `Dockerfile.dev` para desarrollo local.
-- Comandos útiles:
-  - Build: `docker build -t mi-ecommerce-api .`
-  - Run: `docker run -d -p 8000:8000 --name ecommerce_container mi-ecommerce-api`
-
-## Estructura del Proyecto
-
-Ver [README.md](README.md) para un diagrama y detalles de la estructura.
-
-## Troubleshooting
-
-- Si ves `ModuleNotFoundError: No module named 'apps'`, revisa:
-  - Que `manage.py` esté dentro de `backend/`
-  - Que los nombres en `INSTALLED_APPS` y `apps.py` coincidan
-  - Que todas las rutas de configuración sean relativas
+- Django imports use `apps.<appname>` path, not `backend.apps`
+- `apps.py` names must match `INSTALLED_APPS` exactly
+- Use relative config paths (e.g., `config`, not `backend.config`)
+- Commit messages: `type(area): description` (Conventional Commits)
+- Always update AGENTS.md when adding new conventions
 
 ## API Endpoints
 
-- `/admin/` - Panel de administración Django
-- `/api/v1/` - Endpoints principales (users, products, categories)
-- `/api/v1/doc/` - Documentación Swagger generada automáticamente
-- `/api/v1/token/` y `/api/v1/token/refresh/` - Autenticación JWT
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /api/v1/products/` | Any | List products (paginated) |
+| `POST /api/v1/products/` | JWT | Create product |
+| `GET /api/v1/products/{id}/` | Any | Product detail |
+| `PUT/PATCH /api/v1/products/{id}/` | JWT | Update product |
+| `DELETE /api/v1/products/{id}/` | JWT | Delete product |
+| `GET /api/v1/products/me/products/` | JWT | User's products |
+| `GET /api/v1/products/me/plan/` | JWT | User's plan info |
+| `GET /api/v1/categories/` | Any | List categories |
+| `GET /api/v1/users/me/` | JWT | Current user profile |
+| `PUT /api/v1/users/me/` | JWT | Update profile |
+| `POST /api/v1/users/me/password/` | JWT | Change password |
+| `GET /api/v1/users/me/products/` | JWT | User's products |
+| `POST /api/v1/users/update_plan/` | JWT | Update plan |
+| `GET /api/v1/reports/` | JWT | List user's reports |
+| `POST /api/v1/reports/` | JWT | Create report |
+| `/api/v1/token/` | - | Obtain tokens |
+| `/api/v1/token/refresh/` | - | Refresh token |
 
-## Mejores Prácticas y Mejoras Pendientes
+### Query Params (all paginated endpoints)
 
-- Mejorar el modelo de usuario usando `AbstractUser` o `AbstractBaseUser` para mayor flexibilidad y seguridad.
-- Fortalecer permisos para que solo el dueño pueda modificar/eliminar sus productos.
-- Agregar validaciones personalizadas en los serializadores.
-- Implementar mensajería interna, sistema de reportes y favoritos.
-- Mantener la documentación de la API actualizada
-- Agregar errores al archivo ERRORS_AND_AGENTS.md (no commitear).
-- Ver más en [TODO.md](TODO.md).
+- `?page=1` - Page number (default: 1)
+- `?page_size=20` - Items per page (max: 100)
+- `?search=term` - Search filter (products only)
+- `?category=name` - Filter by category
+- `?min_price=X` / `?max_price=X` - Price range
+- `?sort=price_asc|price_desc|name_asc|name_desc` - Sorting
 
-## Open Graph y Meta Tags
+### Response Format
 
-El proyecto implementa meta tags para SEO y compartir en redes sociales:
+All responses follow this structure:
 
-- **index.html**: Meta tags base (description, og:*, twitter:*)
-- **ProductDetail.tsx**: Título y meta description dinámicos basados en el producto
-- **favicon.ico**: Icono simple de bolsa de compras en color primary
-- **og-image.png**: Placeholder en frontend/public/ (crear imagen 1200x630 con Canva/Figma)
+```json
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "pages": 5
+  }
+}
+```
 
-### Actualizar tras deploy
+Error responses:
 
-Reemplazar `https://freemarket.example.com/` con el dominio real en index.html.
+```json
+{
+  "success": false,
+  "error": "Error message",
+  "errors": {...}
+}
+```
 
----
+## Useful Patterns
 
-Actualiza este archivo si cambian las convenciones o la arquitectura. Para convenciones específicas de frontend o Docker, considera crear archivos de instrucciones adicionales.
+```typescript
+// Toast notifications
+import { toast } from "@/components/ui/use-toast";
+toast({ title: "Done", variant: "success" });
+
+// Theme toggle
+import { useThemeStore } from "@/store/themeStore";
+const { toggleTheme } = useThemeStore();
+
+// Scroll animations
+import { ScrollFade } from "@/hooks/useScrollAnimation";
+
+// Use the hook for cached product fetching
+import { useProducts } from "@/hooks/useProducts";
+```
+
+## Common Issues
+
+- `ModuleNotFoundError: No module named 'apps'` → Check `INSTALLED_APPS` matches `apps.py` names
+- Media files not loading → Ensure `MEDIA_URL` and `MEDIA_ROOT` are configured in Django

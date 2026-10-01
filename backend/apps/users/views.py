@@ -46,15 +46,49 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
 
-    @action(
-        detail=False,
-        methods=["get", "put", "patch"],
-    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        # Solo admin puede listar todos los usuarios
+        if not request.user.is_staff:
+            return Response(
+                {"success": False, "error": "No tienes permiso para listar usuarios."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Paginación
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
+        page_size = min(page_size, 100)
+
+        total = queryset.count()
+        pages = (total + page_size - 1) // page_size if total > 0 else 0
+        offset = (page - 1) * page_size
+        users = queryset[offset : offset + page_size]
+
+        serializer = self.get_serializer(users, many=True)
+
+        response_data = serializer.data
+        return Response(
+            {
+                "success": True,
+                "data": response_data,
+                "results": response_data,
+                "pagination": {
+                    "total": total,
+                    "page": page,
+                    "page_size": page_size,
+                    "pages": pages,
+                },
+            }
+        )
+
+    @action(detail=False, methods=["get", "put", "patch"], url_path="me")
     def profile(self, request):
         user = request.user
         if request.method == "GET":
             serializer = UserProfileSerializer(user)
-            return Response(serializer.data)
+            return Response({"success": True, "data": serializer.data})
 
         serializer = UserProfileSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
@@ -65,10 +99,23 @@ class UserViewSet(viewsets.ModelViewSet):
             if "address" in request.data:
                 user.address = request.data["address"]
             user.save()
-            return Response(UserProfileSerializer(user).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "success": True,
+                    "data": UserProfileSerializer(user).data,
+                    "message": "Perfil actualizado exitosamente",
+                }
+            )
+        return Response(
+            {
+                "success": False,
+                "error": "Error de validación",
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    @action(detail=False, methods=["post"])
+    @action(detail=False, methods=["post"], url_path="me/password")
     def change_password(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
@@ -78,32 +125,99 @@ class UserViewSet(viewsets.ModelViewSet):
 
             if not user.check_password(old_password):
                 return Response(
-                    {"old_password": ["La contrasena actual es incorrecta."]},
+                    {"success": False, "error": "La contraseña actual es incorrecta."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             user.set_password(new_password)
             user.save()
-            return Response({"message": "Contrasena cambiada exitosamente."})
+            return Response(
+                {"success": True, "message": "Contraseña cambiada exitosamente."}
+            )
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                "success": False,
+                "error": "Error de validación",
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], url_path="me/products")
     def my_products(self, request):
-        products = Product.objects.filter(seller=request.user)
+        queryset = Product.objects.filter(seller=request.user)
+
+        # Paginación
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
+        page_size = min(page_size, 100)
+
+        total = queryset.count()
+        pages = (total + page_size - 1) // page_size if total > 0 else 0
+        offset = (page - 1) * page_size
+        products = queryset.select_related("category").prefetch_related("images")[
+            offset : offset + page_size
+        ]
+
         serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+
+        response_data = serializer.data
+        return Response(
+            {
+                "success": True,
+                "data": response_data,
+                "results": response_data,
+                "pagination": {
+                    "total": total,
+                    "page": page,
+                    "page_size": page_size,
+                    "pages": pages,
+                },
+            }
+        )
 
     @action(detail=False, methods=["get"])
     def all_products(self, request):
         if not request.user.is_staff:
             return Response(
-                {"error": "No tienes permiso para ver todos los productos."},
+                {
+                    "success": False,
+                    "error": "No tienes permiso para ver todos los productos.",
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
-        products = Product.objects.all()
+
+        queryset = Product.objects.select_related(
+            "category", "seller"
+        ).prefetch_related("images")
+
+        # Paginación
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 20))
+        page_size = min(page_size, 100)
+
+        total = queryset.count()
+        pages = (total + page_size - 1) // page_size if total > 0 else 0
+        offset = (page - 1) * page_size
+        products = queryset[offset : offset + page_size]
+
         serializer = ProductSerializer(products, many=True)
-        return Response(serializer.data)
+
+        response_data = serializer.data
+        return Response(
+            {
+                "success": True,
+                "data": response_data,
+                "results": response_data,
+                "pagination": {
+                    "total": total,
+                    "page": page,
+                    "page_size": page_size,
+                    "pages": pages,
+                },
+            }
+        )
 
     @action(detail=False, methods=["post"])
     def update_plan(self, request):
@@ -114,9 +228,19 @@ class UserViewSet(viewsets.ModelViewSet):
             user.save()
             return Response(
                 {
+                    "success": True,
                     "message": "Plan actualizado exitosamente.",
-                    "plan": user.plan,
-                    "product_limit": user.product_limit,
+                    "data": {
+                        "plan": user.plan,
+                        "product_limit": user.product_limit,
+                    },
                 }
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                "success": False,
+                "error": "Error de validación",
+                "errors": serializer.errors,
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
