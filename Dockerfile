@@ -1,48 +1,39 @@
-# Use a multi-stage build for efficiency and security
-FROM python:3.11-slim as builder
+# Stage 1: Builder
+FROM python:3.11-slim AS builder
 
-# Set environment variables to prevent Python from writing .pyc files
-# and ensure output is immediately available in the container.
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Install dependencies first to leverage Docker caching
-# We assume requirements.txt exists for production dependencies (e.g., gunicorn, psycopg2-binary)
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --upgrade pip
-RUN pip wheel -r requirements.txt --no-cache-dir
+RUN pip wheel -r requirements.txt --no-cache-dir --wheel-dir /wheelhouse
 
-# Copy the rest of the application code
+# Copy backend code
 COPY backend/ /app/backend
-COPY manage.py .
-
-# Run migrations and collect static files in the build stage (optional, but good practice)
-# NOTE: In a real CI/CD pipeline, you might run these steps before building the image
-# or mount volumes if running locally for testing.
-RUN pip install gunicorn # Ensure gunicorn is available for this step if not in requirements.txt
-RUN python manage.py makemigrations --noinput
-RUN python manage.py migrate
 
 # --- Final Production Image ---
-FROM python:3.11-slim as final
+FROM python:3.11-slim AS final
 
 WORKDIR /app
 
-# Copy only the necessary virtual environment dependencies from the builder stage
-COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
-# Copy compiled static files and application code
-COPY --from=builder /app/backend /app/backend
-COPY --from=builder /app/manage.py .
+# Install dependencies from wheelhouse
+COPY --from=builder /wheelhouse /wheelhouse
+RUN pip install --no-cache-dir /wheelhouse/*
 
-# Expose the port Gunicorn will listen on (standard is 8000)
+# Copy application code
+COPY backend/ /app/backend
+
+# Create static and media directories
+RUN mkdir -p /app/media /app/staticfiles
+
+# Expose port
 EXPOSE 8000
 
-# Set the command to run the application using Gunicorn
-# Adjust 'your_project_name' to match your actual Django project name found in settings.py
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application"]
+# Run migrations and collect static files
+RUN python manage.py migrate --noinput
+RUN python manage.py collectstatic --noinput
 
-# Commands for local run:
-# docker build -t mi-ecommerce-api .
-# docker run -d -p 8000:8000 --name ecommerce_container mi-ecommerce-api
+# Start with Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]

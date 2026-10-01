@@ -1,4 +1,7 @@
 asgiref==3.11.1
+dj-database-url==2.3.0
+gunicorn==23.0.0
+psycopg2-binary==2.9.10
 attrs==26.1.0
 cfgv==3.5.0
 distlib==0.4.0
