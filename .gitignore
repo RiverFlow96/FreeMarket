@@ -20,7 +20,6 @@ Thumbs.db
 backend/media/
 /static/
 */*/migrations/*/__pycache__
-backend/apps/*/migrations/
 */*.egg-info/
 
 # Local IDE/Editor Files
