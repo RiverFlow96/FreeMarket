@@ -44,10 +44,12 @@ export default function Login() {
 
       if (userRes.ok) {
         const userData = await userRes.json();
-        login(data.access, data.refresh, { id: userData.id, username: userData.username, email: userData.email });
+        const actualData = userData.data || userData;
+        const userId = typeof actualData.id === 'number' ? actualData.id : parseInt(actualData.id, 10);
+        login(data.access, data.refresh, { id: userId, username: actualData.username, email: actualData.email });
         navigate("/products");
       } else {
-        login(data.access, data.refresh, { id: 0, username, email: "" });
+        login(data.access, data.refresh, { id: username.length, username, email: username });
         navigate("/products");
       }
     } catch (err) {
@@ -89,7 +91,7 @@ export default function Login() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 pb-6">
               <label htmlFor="password" className="text-sm font-medium">Contraseña</label>
               <Input
                 id="password"

@@ -6,8 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
-import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star, Package } from "lucide-react";
+import { User, Loader2, Trash2, Edit2, Check, X, ArrowLeft, Crown, Zap, Star, Package, Bell, Clock } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Product {
   id: number;
@@ -22,6 +29,8 @@ interface PlanInfo {
   product_limit: number;
   product_count: number;
   can_add_product: boolean;
+  product_duration_weeks?: number;
+  notification_preference?: string;
 }
 
 export default function Profile() {
@@ -37,6 +46,7 @@ export default function Profile() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [notificationPreference, setNotificationPreference] = useState("in_app");
 
   const [editingEmail, setEditingEmail] = useState(false);
   const [editEmailValue, setEditEmailValue] = useState("");
@@ -97,6 +107,7 @@ const fetchData = async () => {
           setEmail(data.email || "");
           setPhone(data.phone != null ? String(data.phone) : "");
           setAddress(data.address || "");
+          setNotificationPreference(data.notification_preference || "in_app");
         }
 
         if (productsRes.ok) {
@@ -137,8 +148,10 @@ const fetchData = async () => {
           setPhone(data.phone != null ? String(data.phone) : "");
         } else if (field === "address") {
           setAddress(data.address || "");
+        } else if (field === "notification_preference") {
+          setNotificationPreference(data.notification_preference || "in_app");
         }
-        toast.success(`${field === "phone" ? "Teléfono" : field.charAt(0).toUpperCase() + field.slice(1)} actualizado exitosamente.`);
+        toast.success(`${field === "phone" ? "Teléfono" : field === "notification_preference" ? "Preferencia de notificación" : field.charAt(0).toUpperCase() + field.slice(1)} actualizada exitosamente.`);
       } else {
         const data = await res.json();
         toast.error(data[field]?.[0] || "Error al actualizar.");
@@ -248,13 +261,15 @@ if (!accessToken) {
         const data = await res.json();
         const newPlan = data.data.plan;
         const newLimit = data.data.product_limit;
+        const newDuration = data.data.product_duration_weeks;
         setPlanInfo({
           ...planInfo!,
           plan: newPlan,
           product_limit: newLimit,
           product_count: planInfo!.product_count,
+          product_duration_weeks: newDuration,
         });
-        toast.success(`Ahora tienes el plan ${newPlan === "plus" ? "Plus" : newPlan === "pro" ? "Pro" : "Gratis"} con límite de ${newLimit} productos.`);
+        toast.success(`Ahora tienes el plan ${newPlan === "plus" ? "Plus" : newPlan === "pro" ? "Pro" : "Gratis"} con límite de ${newLimit} productos y duran ${newDuration} ${newDuration === 1 ? "semana" : "semanas"}.`);
       } else {
         const data = await res.json();
         toast.error(data.plan?.[0] || "Error al actualizar el plan.");
@@ -388,6 +403,33 @@ if (!accessToken) {
                 </Button>
               )}
             </div>
+
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                  <Bell className="w-3 h-3" />
+                  Notificación de expiración
+                </p>
+                <Select
+                  value={notificationPreference}
+                  onValueChange={(value) => {
+                    setNotificationPreference(value);
+                    saveField("notification_preference", value);
+                  }}
+                  disabled={saving}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="in_app">Solo en la app</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="both">Email y SMS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -428,6 +470,15 @@ if (!accessToken) {
                       <p className="text-xs text-muted-foreground">productos publicados</p>
                     </div>
                   </div>
+
+                  {planInfo.product_duration_weeks && (
+                    <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <Clock className="w-4 h-4 text-blue-500" />
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Tus productos duran <strong>{planInfo.product_duration_weeks} {planInfo.product_duration_weeks === 1 ? "semana" : "semanas"}</strong> antes de expirar
+                      </p>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-3 gap-2">
                     <button

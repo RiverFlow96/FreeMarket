@@ -178,7 +178,8 @@ export function MultiStepForm({ categories, planInfo, loadingPlan }: MultiStepFo
 
       let product;
       try {
-        product = await res.json();
+        const response = await res.json();
+        product = response.data;
       } catch {
         throw new Error("Producto publicado pero no se pudo obtener la respuesta del servidor.");
       }

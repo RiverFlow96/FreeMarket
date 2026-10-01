@@ -37,6 +37,3 @@ localhost.har
 auditoria-seo-freemarket.html
 interface-design-audit.html
 frontend-design-plan.html
-
-# Environment files
-.env

@@ -14,6 +14,19 @@ PLAN_LIMITS = {
     Plan.PRO: 10,
 }
 
+PLAN_PRODUCT_DURATION_WEEKS = {
+    Plan.FREE: 1,
+    Plan.PLUS: 2,
+    Plan.PRO: 3,
+}
+
+
+class NotificationPreference(models.TextChoices):
+    EMAIL = "email", "Email"
+    SMS = "sms", "SMS"
+    BOTH = "both", "Email y SMS"
+    IN_APP = "in_app", "Solo en la app"
+
 
 # User Model
 class User(AbstractUser):
@@ -24,6 +37,11 @@ class User(AbstractUser):
         max_length=10,
         choices=Plan.choices,
         default=Plan.FREE,
+    )
+    notification_preference = models.CharField(
+        max_length=10,
+        choices=NotificationPreference.choices,
+        default=NotificationPreference.IN_APP,
     )
 
     class Meta:
@@ -41,3 +59,7 @@ class User(AbstractUser):
     @property
     def can_add_product(self):
         return self.product_count < self.product_limit
+
+    @property
+    def product_duration_weeks(self):
+        return PLAN_PRODUCT_DURATION_WEEKS.get(self.plan, 1)

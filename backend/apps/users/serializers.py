@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     product_limit = serializers.IntegerField(read_only=True)
     product_count = serializers.IntegerField(read_only=True)
     can_add_product = serializers.BooleanField(read_only=True)
+    product_duration_weeks = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -21,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             "product_limit",
             "product_count",
             "can_add_product",
+            "product_duration_weeks",
         ]
 
 
@@ -43,6 +45,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     product_limit = serializers.IntegerField(read_only=True)
     product_count = serializers.IntegerField(read_only=True)
     can_add_product = serializers.BooleanField(read_only=True)
+    product_duration_weeks = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -56,6 +59,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "product_limit",
             "product_count",
             "can_add_product",
+            "product_duration_weeks",
+            "notification_preference",
         ]
 
 
