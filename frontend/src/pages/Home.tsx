@@ -74,12 +74,12 @@ export function Home() {
 
         <div className="absolute top-20 left-4 sm:left-10 flex flex-col gap-3 opacity-30">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border blur-sm animate-pulse" style={{ animationDelay: `${i * 0.5}s` }} />
+            <div key={i} className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 border border-border/50 animate-pulse" style={{ animationDelay: `${i * 0.5}s` }} />
           ))}
         </div>
         <div className="absolute bottom-20 right-4 sm:right-10 flex flex-col gap-3 opacity-30">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-gradient-to-bl from-primary/20 to-primary/5 border blur-sm animate-pulse" style={{ animationDelay: `${i * 0.5 + 0.25}s` }} />
+            <div key={i} className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-primary/10 border border-border/50 animate-pulse" style={{ animationDelay: `${i * 0.5 + 0.25}s` }} />
           ))}
         </div>
 
@@ -87,7 +87,7 @@ export function Home() {
           <ScrollFade>
             <div className="flex flex-col items-center gap-4 text-center">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl shadow-primary/25 ring-4 ring-primary/10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
                   <ShoppingBag className="w-9 h-9 sm:w-11 sm:h-11 text-primary-foreground" />
                 </div>
               </div>
@@ -109,7 +109,7 @@ export function Home() {
               variant="outline"
               size="lg"
               asChild
-              className="gap-2 hover:bg-muted/80 border-2"
+              className="gap-2 hover:bg-muted/80 ring-1 ring-border hover:ring-primary/30"
             >
               <Link to="/products">
                 Explorar productos
@@ -120,7 +120,7 @@ export function Home() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+                className="gap-2 bg-primary hover:bg-primary/90 shadow-sm"
               >
                 <Link to="/sell">
                   Vender producto
@@ -131,7 +131,7 @@ export function Home() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+                className="gap-2 bg-primary hover:bg-primary/90 shadow-sm"
               >
                 <Link to="/register">
                   Empezar a vender
@@ -171,7 +171,7 @@ export function Home() {
                   return (
                     <ScrollFade delay={index + 1} key={product.id}>
                       <Link to={`/products/${product.id}`} className="block">
-                        <Card className="w-56 sm:w-64 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 group flex flex-col bg-card border-2 hover:border-primary/30">
+                        <Card className="w-56 sm:w-64 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 group flex flex-col bg-card ring-1 ring-foreground/10 hover:ring-primary/30">
                           <div className="aspect-square relative bg-muted overflow-hidden shrink-0">
                             {showImage ? (
                               <img src={cleanedUrl} alt={product.name} className="object-cover w-full h-full transition-transform group-hover:scale-105" onError={() => handleImageError(product.id)} loading="lazy" />
@@ -217,7 +217,7 @@ export function Home() {
         </section>
       )}
 
-      <section className="py-16 sm:py-24 bg-gradient-to-b from-secondary/30 to-background dark:from-secondary/20 dark:to-background">
+      <section className="py-16 sm:py-24 bg-secondary/30 dark:bg-secondary/15">
         <div className="container mx-auto px-4">
           <ScrollFade>
             <div className="text-center mb-12">
@@ -233,8 +233,8 @@ export function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <ScrollFade delay={1}>
-              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 ring-1 ring-foreground/10 hover:ring-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <Package className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Miles de productos</h3>
@@ -245,8 +245,8 @@ export function Home() {
             </ScrollFade>
 
             <ScrollFade delay={2}>
-              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 ring-1 ring-foreground/10 hover:ring-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <Users className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Comunidad activa</h3>
@@ -257,8 +257,8 @@ export function Home() {
             </ScrollFade>
 
             <ScrollFade delay={3}>
-              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 ring-1 ring-foreground/10 hover:ring-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <Shield className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Transacciones seguras</h3>
@@ -269,8 +269,8 @@ export function Home() {
             </ScrollFade>
 
             <ScrollFade delay={4}>
-              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 border-2 hover:border-primary/30 group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
+              <div className="flex flex-col items-center text-center p-6 sm:p-8 rounded-2xl bg-card hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 ring-1 ring-foreground/10 hover:ring-primary/30 group">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/10 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300">
                   <ShoppingBag className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-bold text-lg mb-2 text-card-foreground group-hover:text-primary transition-colors">Fácil de usar</h3>
@@ -283,7 +283,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="py-16 sm:py-24 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 dark:from-primary/15 dark:via-primary/10 dark:to-primary/15 relative overflow-hidden">
+      <section className="py-16 sm:py-24 bg-secondary/50 dark:bg-secondary/20 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--primary)_0%,_transparent_70%)] opacity-30" />
         <div className="container mx-auto px-4 text-center relative z-10">
           <ScrollFade>
@@ -303,7 +303,7 @@ export function Home() {
                   <Button
                     size="lg"
                     asChild
-                    className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+                    className="gap-2 bg-primary hover:bg-primary/90 shadow-sm"
                   >
                     <Link to="/sell">
                       Vender producto
@@ -314,7 +314,7 @@ export function Home() {
                     size="lg"
                     variant="outline"
                     asChild
-                    className="gap-2 border-2 hover:bg-muted/50"
+                    className="gap-2 ring-1 ring-border hover:bg-muted/50"
                   >
                     <Link to="/products">
                       Ver productos
@@ -326,7 +326,7 @@ export function Home() {
                   <Button
                     size="lg"
                     asChild
-                    className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
+                    className="gap-2 bg-primary hover:bg-primary/90 shadow-sm"
                   >
                     <Link to="/register">
                       Crear cuenta
@@ -337,7 +337,7 @@ export function Home() {
                     size="lg"
                     variant="outline"
                     asChild
-                    className="gap-2 border-2 hover:bg-muted/50"
+                    className="gap-2 ring-1 ring-border hover:bg-muted/50"
                   >
                     <Link to="/products">
                       Ver productos
@@ -354,7 +354,7 @@ export function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm shadow-primary/10">
                 <ShoppingBag className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="font-bold text-lg text-card-foreground">FreeMarket</span>
