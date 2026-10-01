@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useState } from "react"
 import {
   Dialog,
@@ -57,7 +58,7 @@ export function ReportModal({
     setIsSubmitting(true)
     try {
       const token = localStorage.getItem("accessToken")
-      const response = await fetch("/api/v1/reports/", {
+      const response = await fetch(getApiUrl("/api/v1/reports/"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

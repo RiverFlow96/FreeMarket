@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ export default function ProductDetail() {
     if (!id) return;
     setLoading(true);
     setError("");
-    fetch(`/api/v1/products/${id}/`)
+    fetch(getApiUrl(`/api/v1/products/${id}/`))
       .then((res) => {
         if (!res.ok) throw new Error("Error al obtener producto");
         return res.json();

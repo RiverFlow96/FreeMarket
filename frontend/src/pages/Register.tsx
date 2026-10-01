@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/utils/apiUrl";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
@@ -23,7 +24,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/v1/users/", {
+      const res = await fetch(getApiUrl("/api/v1/users/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password, phone: phone || null, address: address || "" }),
@@ -56,7 +57,7 @@ export default function Register() {
         throw new Error(errorMessages.join(". "));
       }
 
-      const loginRes = await fetch("/api/v1/token/", {
+      const loginRes = await fetch(getApiUrl("/api/v1/token/"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

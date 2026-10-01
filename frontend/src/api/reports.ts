@@ -1,3 +1,5 @@
+import { getApiUrl } from "@/utils/apiUrl";
+
 const API_BASE = "/api/v1";
 
 const getAuthHeaders = () => {
@@ -28,7 +30,7 @@ export interface CreateReportData {
 
 export const reportsApi = {
   async create(data: CreateReportData): Promise<Report> {
-    const res = await fetch(`${API_BASE}/reports/`, {
+    const res = await fetch(getApiUrl(`${API_BASE}/reports/`), {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -41,7 +43,7 @@ export const reportsApi = {
   },
 
   async getAll(): Promise<Report[]> {
-    const res = await fetch(`${API_BASE}/reports/`, {
+    const res = await fetch(getApiUrl(`${API_BASE}/reports/`), {
       headers: getAuthHeaders(),
     });
     if (!res.ok) {
@@ -51,7 +53,7 @@ export const reportsApi = {
   },
 
   async getById(id: number): Promise<Report> {
-    const res = await fetch(`${API_BASE}/reports/${id}/`, {
+    const res = await fetch(getApiUrl(`${API_BASE}/reports/${id}/`), {
       headers: getAuthHeaders(),
     });
     if (!res.ok) {
