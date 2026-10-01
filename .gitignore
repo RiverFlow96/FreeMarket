@@ -34,3 +34,10 @@ ERRORS_AND_AGENTS.md
 TODO.md
 
 localhost.har
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
