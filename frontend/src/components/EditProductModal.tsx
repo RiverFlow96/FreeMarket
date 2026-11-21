@@ -90,14 +90,11 @@ export function EditProductModal({
     category: product.category ? String(product.category) : "none",
   });
 
-  const { getAccessToken, accessToken } = useAuthStore();
+  const { getAccessToken } = useAuthStore();
   const navigate = useNavigate();
   const [localImages, setLocalImages] = useState<ProductImage[]>(product.images || []);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  console.log("DEBUG store accessToken:", accessToken);
-  console.log("DEBUG getAccessToken():", getAccessToken());
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -243,7 +240,6 @@ export function EditProductModal({
     setIsUploading(true);
     try {
       const token = getAccessToken();
-      console.log("DEBUG upload token:", token);
       if (!token) {
         throw new Error("No hay token de autenticación");
       }

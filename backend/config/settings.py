@@ -92,14 +92,10 @@ if DATABASE_URL:
             )
         }
     except Exception as e:
-        print(f"Warning: DATABASE_URL inválido ({e}). Usando SQLite.")
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
-        }
+        raise ValueError("DATABASE_URL inválido; revise la configuración de la base de datos") from e
 else:
+    if not DEBUG:
+        raise ValueError("DATABASE_URL es obligatorio cuando DEBUG=False")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",

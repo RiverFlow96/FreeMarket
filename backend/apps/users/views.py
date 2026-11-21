@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import permissions
 from django.utils import timezone
+from apps.utils.api_helpers import parse_pagination_params
 
 from apps.products.models import Product, GRACE_PERIOD_HOURS
 from apps.products.serializers import ProductSerializer
@@ -33,8 +34,10 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             return [AllowAny()]
-        if self.action in ["profile", "change_password", "my_products", "update_plan"]:
+        if self.action in ["profile", "change_password", "my_products"]:
             return [IsAuthenticated()]
+        if self.action == "update_plan":
+            return [permissions.IsAdminUser()]
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -58,9 +61,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
-        page_size = min(page_size, 100)
+        page, page_size = parse_pagination_params(request)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -158,9 +159,7 @@ class UserViewSet(viewsets.ModelViewSet):
         queryset = Product.objects.filter(seller=request.user)
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
-        page_size = min(page_size, 100)
+        page, page_size = parse_pagination_params(request)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -202,9 +201,7 @@ class UserViewSet(viewsets.ModelViewSet):
         ).prefetch_related("images")
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
-        page_size = min(page_size, 100)
+        page, page_size = parse_pagination_params(request)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0

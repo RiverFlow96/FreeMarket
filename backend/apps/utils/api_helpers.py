@@ -2,6 +2,26 @@
 
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
+
+
+def parse_pagination_params(
+    request, default_page_size=20, max_page_size=100, page_size_param="page_size"
+):
+    try:
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get(page_size_param, default_page_size))
+    except (TypeError, ValueError) as exc:
+        raise ValidationError(
+            {"success": False, "error": "page y page_size deben ser enteros positivos."}
+        ) from exc
+
+    if page < 1 or page_size < 1:
+        raise ValidationError(
+            {"success": False, "error": "page y page_size deben ser mayores que cero."}
+        )
+
+    return page, min(page_size, max_page_size)
 
 
 def paginate_queryset(
@@ -22,11 +42,12 @@ def paginate_queryset(
 
     Supports query params: ?page=1&page_size=20&search=term
     """
-    page = int(request.query_params.get("page", 1))
-    page_size = int(request.query_params.get(page_size_param, default_page_size))
-
-    # Clamp page_size to max
-    page_size = min(page_size, max_page_size)
+    page, page_size = parse_pagination_params(
+        request,
+        default_page_size=default_page_size,
+        max_page_size=max_page_size,
+        page_size_param=page_size_param,
+    )
 
     # Get search param if exists
     search = request.query_params.get("search", None)

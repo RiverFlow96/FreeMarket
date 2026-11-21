@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from apps.utils.api_helpers import parse_pagination_params
 
 from .models import Report
 from .serializers import ReportSerializer
@@ -31,9 +32,7 @@ class ReportViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
-        page_size = min(page_size, 100)
+        page, page_size = parse_pagination_params(request)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0

@@ -1,5 +1,5 @@
 from .models import Product, ProductImage
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer, ProductDetailSerializer
 from .permissions import IsAdminOrOwner
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -7,17 +7,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
+from apps.utils.api_helpers import parse_pagination_params
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProductDetailSerializer
+        return ProductSerializer
+
     def get_permissions(self):
         public_actions = ["list", "retrieve"]
         if self.action in public_actions:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsAdminOrOwner()]
 
     def get_queryset(self):
         queryset = Product.objects.select_related(
@@ -59,9 +65,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
-        page_size = min(page_size, 100)  # Max 100 items
+        page, page_size = parse_pagination_params(request)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0

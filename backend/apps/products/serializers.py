@@ -12,9 +12,6 @@ class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
     seller_name = serializers.CharField(source="seller.username", read_only=True)
     seller_id = serializers.IntegerField(source="seller.id", read_only=True)
-    seller_email = serializers.EmailField(source="seller.email", read_only=True)
-    seller_phone = serializers.IntegerField(source="seller.phone", read_only=True)
-    seller_address = serializers.CharField(source="seller.address", read_only=True)
     image = serializers.SerializerMethodField()
     images = ProductImageSerializer(many=True, read_only=True)
     is_expired = serializers.BooleanField(read_only=True)
@@ -34,9 +31,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "image_url",
             "seller_id",
             "seller_name",
-            "seller_email",
-            "seller_phone",
-            "seller_address",
             "created_at",
             "expires_at",
             "is_active",
@@ -50,9 +44,6 @@ class ProductSerializer(serializers.ModelSerializer):
             "seller",
             "seller_id",
             "seller_name",
-            "seller_email",
-            "seller_phone",
-            "seller_address",
             "category_name",
             "image_url",
             "images",
@@ -71,6 +62,14 @@ class ProductSerializer(serializers.ModelSerializer):
         if obj.image_url:
             return obj.image_url
         return None
+
+
+class ProductDetailSerializer(ProductSerializer):
+    seller_email = serializers.EmailField(source="seller.email", read_only=True)
+    seller_phone = serializers.IntegerField(source="seller.phone", read_only=True)
+
+    class Meta(ProductSerializer.Meta):
+        fields = ProductSerializer.Meta.fields + ["seller_email", "seller_phone"]
 
 
 # class ProductsGroupSerializer(serializers.ModelSerializer):

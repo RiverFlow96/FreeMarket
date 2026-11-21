@@ -1,20 +1,25 @@
 from .models import Category
 from .serializers import CategorySerializer
 from rest_framework import viewsets
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from apps.utils.api_helpers import parse_pagination_params
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
 
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [AllowAny()]
+        return [IsAdminUser()]
+
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 100))
-        page_size = min(page_size, 100)
+        page, page_size = parse_pagination_params(request, default_page_size=100)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0
