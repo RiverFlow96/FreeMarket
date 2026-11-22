@@ -91,7 +91,10 @@ if DATABASE_URL:
 
         DATABASES = {
             "default": dj_database_url.parse(
-                DATABASE_URL, conn_max_age=600, ssl_require=True
+                DATABASE_URL,
+                conn_max_age=600,
+                ssl_require=parsed.hostname
+                not in {"localhost", "127.0.0.1", "::1", "postgres"},
             )
         }
     except Exception as e:
