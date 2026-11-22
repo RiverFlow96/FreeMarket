@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -14,9 +14,9 @@ RUN pip wheel -r requirements.txt --no-cache-dir --wheel-dir /wheelhouse
 COPY backend/ /app/backend
 
 # --- Final Production Image ---
-FROM python:3.11-slim AS final
+FROM python:3.12-slim AS final
 
-WORKDIR /app
+WORKDIR /app/backend
 
 # Install dependencies from wheelhouse
 COPY --from=builder /wheelhouse /wheelhouse
@@ -31,9 +31,5 @@ RUN mkdir -p /app/media /app/staticfiles
 # Expose port
 EXPOSE 8000
 
-# Run migrations and collect static files
-RUN python manage.py migrate --noinput
-RUN python manage.py collectstatic --noinput
-
 # Start with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "config.wsgi:application"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py seed_categories && exec gunicorn --bind 0.0.0.0:${PORT:-8000} config.wsgi:application"]

@@ -3,10 +3,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import permissions
-from django.utils import timezone
 from apps.utils.api_helpers import parse_pagination_params
 
-from apps.products.models import Product, GRACE_PERIOD_HOURS
+from apps.products.models import Product
 from apps.products.serializers import ProductSerializer
 
 from .models import User, NotificationPreference
@@ -44,6 +43,21 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return UserCreateSerializer
         return UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {
+                "success": True,
+                "data": UserSerializer(
+                    user, context=self.get_serializer_context()
+                ).data,
+                "message": "Usuario creado exitosamente",
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     def get_queryset(self):
         if self.request.user.is_staff:

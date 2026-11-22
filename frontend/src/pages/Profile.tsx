@@ -77,7 +77,7 @@ export default function Profile() {
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, []);
+  }, [accessToken]);
 
   useEffect(() => {
     if (!accessToken) {

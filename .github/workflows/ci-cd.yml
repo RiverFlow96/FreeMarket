@@ -22,6 +22,8 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+      DJANGO_SECRET_KEY: ci-only-secret-key
+      DEBUG: "false"
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -37,7 +39,8 @@ jobs:
           python backend/manage.py migrate
       - name: Run tests
         run: |
-          python backend/manage.py test
+          cd backend
+          python -m pytest
       - name: Lint (ruff)
         run: |
           pip install ruff
@@ -71,7 +74,7 @@ jobs:
       - name: Run tests
         run: |
           cd frontend
-          bun run test || true
+          bun run test:run
 
   docker:
     name: Docker Build
