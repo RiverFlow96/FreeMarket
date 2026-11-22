@@ -1,12 +1,15 @@
+const PRODUCTION_API_ORIGIN = "https://freemarket-ivim.onrender.com";
+
+const getApiOrigin = (): string => {
+  const configuredUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = configuredUrl || (import.meta.env.PROD ? PRODUCTION_API_ORIGIN : "");
+  return apiUrl.replace(/\/api\/v1\/?$/, "").replace(/\/$/, "");
+};
+
 export const getApiUrl = (path: string): string => {
-  // En producción, VITE_API_URL normalmente es https://freemarket-backend-p9rs.onrender.com/api/v1
   // Si la ruta ya empieza con /api/v1, extraemos solo el origen para evitar duplicados.
-  const envUrl = import.meta.env.VITE_API_URL;
-
-  if (!envUrl) return path;
-
-  // Si la url de entorno incluye /api/v1, lo removemos para usarlo como origen base
-  const origin = envUrl.replace(/\/api\/v1\/?$/, '');
+  const origin = getApiOrigin();
+  if (!origin) return path;
 
   return `${origin}${path}`;
 };
@@ -32,10 +35,9 @@ export const getMediaUrl = (path: string | null | undefined): string | null => {
       decoded = `/media/${decoded}`; // Por defecto asumimos que va en media
     }
 
-    const envUrl = import.meta.env.VITE_API_URL;
-    if (!envUrl) return decoded; // Local dev con vite proxy
+    const origin = getApiOrigin();
+    if (!origin) return decoded; // Local dev con vite proxy
 
-    const origin = envUrl.replace(/\/api\/v1\/?$/, '');
     return `${origin}${decoded}`;
   } catch {
     return null;

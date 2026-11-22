@@ -1,5 +1,5 @@
 from .models import Product, ProductImage
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer, ProductDetailSerializer
 from .permissions import IsAdminOrOwner
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -7,16 +7,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
+from apps.utils.api_helpers import parse_pagination_params
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProductDetailSerializer
+        return ProductSerializer
+
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        public_actions = ["list", "retrieve"]
+        if self.action in public_actions:
             return [AllowAny()]
-        return super().get_permissions()
+        return [IsAdminOrOwner()]
 
     def get_queryset(self):
         queryset = Product.objects.select_related(
@@ -58,9 +65,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
 
         # Paginación
-        page = int(request.query_params.get("page", 1))
-        page_size = int(request.query_params.get("page_size", 20))
-        page_size = min(page_size, 100)  # Max 100 items
+        page, page_size = parse_pagination_params(request)
 
         total = queryset.count()
         pages = (total + page_size - 1) // page_size if total > 0 else 0
@@ -149,6 +154,31 @@ class ProductViewSet(viewsets.ModelViewSet):
             status=status.HTTP_204_NO_CONTENT,
         )
 
+    def partial_update(self, request, *args, **kwargs):
+        """Override partial_update to return consistent response format"""
+        product = self.get_object()
+        if product.seller_id != request.user.id and not request.user.is_staff:
+            return Response(
+                {
+                    "success": False,
+                    "error": "No tienes permiso para modificar este producto.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = self.get_serializer(product, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {
+                "success": True,
+                "data": serializer.data,
+                "message": "Producto actualizado exitosamente",
+            },
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def my_plan(self, request):
         user = request.user
@@ -160,6 +190,73 @@ class ProductViewSet(viewsets.ModelViewSet):
                     "product_limit": user.product_limit,
                     "product_count": user.product_count,
                     "can_add_product": user.can_add_product,
+                    "product_duration_weeks": user.product_duration_weeks,
+                    "notification_preference": user.notification_preference,
                 },
             }
         )
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def add_image(self, request, pk=None):
+        """Upload image to product"""
+        product = self.get_object()
+        if product.seller_id != request.user.id and not request.user.is_staff:
+            return Response(
+                {
+                    "success": False,
+                    "error": "No tienes permiso para modificar este producto.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        image_file = request.FILES.get("image")
+        if not image_file:
+            return Response(
+                {"success": False, "error": "No se proporcionó ninguna imagen."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        product_image = ProductImage.objects.create(product=product, image=image_file)
+
+        return Response(
+            {
+                "success": True,
+                "data": {
+                    "id": product_image.id,
+                    "image": product_image.image.url,
+                },
+                "message": "Imagen agregada exitosamente",
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated])
+    def delete_image(self, request, pk=None):
+        product = self.get_object()
+        if product.seller_id != request.user.id and not request.user.is_staff:
+            return Response(
+                {
+                    "success": False,
+                    "error": "No tienes permiso para modificar este producto.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        image_id = request.query_params.get("image_id")
+        if not image_id:
+            return Response(
+                {"success": False, "error": "Se requiere el ID de la imagen."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            product_image = ProductImage.objects.get(id=image_id, product=product)
+            product_image.delete()
+            return Response(
+                {"success": True, "message": "Imagen eliminada exitosamente"},
+            )
+        except ProductImage.DoesNotExist:
+            return Response(
+                {"success": False, "error": "La imagen no existe."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

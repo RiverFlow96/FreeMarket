@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 from decouple import config
 
@@ -39,6 +40,8 @@ INSTALLED_APPS = [
     "apps.products",
     "apps.reports",
 ]
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -92,14 +95,12 @@ if DATABASE_URL:
             )
         }
     except Exception as e:
-        print(f"Warning: DATABASE_URL inválido ({e}). Usando SQLite.")
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
-        }
+        raise ValueError(
+            "DATABASE_URL inválido; revise la configuración de la base de datos"
+        ) from e
 else:
+    if not DEBUG:
+        raise ValueError("DATABASE_URL es obligatorio cuando DEBUG=False")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -186,3 +187,11 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 AUTH_USER_MODEL = "users.User"
+
+# JWT Settings - Extended access token lifetime for development
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),  # 24 hours instead of 5 min
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # 7 days instead of 24 hours
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+}

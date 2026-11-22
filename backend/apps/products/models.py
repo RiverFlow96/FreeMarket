@@ -1,6 +1,16 @@
 import os
 from django.db import models
+from django.utils import timezone
 from apps.categories.models import Category
+
+
+PLAN_PRODUCT_DURATION_WEEKS = {
+    "free": 1,
+    "plus": 2,
+    "pro": 3,
+}
+
+GRACE_PERIOD_HOURS = 24
 
 
 def product_image_path(instance, filename):
@@ -37,6 +47,12 @@ class Product(models.Model):
     image = models.ImageField(upload_to=product_image_path, blank=True, null=True)
     image_url = models.URLField(blank=True, null=True)
     seller = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"Producto: {self.name}"
@@ -46,6 +62,29 @@ class Product(models.Model):
         if self.image:
             return self.image.url
         return self.image_url
+
+    @property
+    def is_expired(self):
+        if not self.is_active:
+            return True
+        if self.expires_at and self.expires_at < timezone.now():
+            return True
+        return False
+
+    def save(self, *args, **kwargs):
+        if not self.created_at:
+            self.created_at = timezone.now()
+        if not self.expires_at and self.seller_id:
+            weeks = PLAN_PRODUCT_DURATION_WEEKS.get(self.seller.plan, 1)
+            self.expires_at = timezone.now() + timezone.timedelta(weeks=weeks)
+        super().save(*args, **kwargs)
+
+    def check_and_expire(self):
+        if self.is_active and self.expires_at and self.expires_at < timezone.now():
+            self.is_active = False
+            self.save(update_fields=["is_active"])
+            return True
+        return False
 
 
 class ProductImage(models.Model):

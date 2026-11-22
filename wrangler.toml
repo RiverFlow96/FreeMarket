@@ -6,4 +6,4 @@ route = ""
 zone_id = ""
 
 [env.production]
-vars = { VITE_API_URL = "https://freemarket-backend-p9rs.onrender.com/api/v1" }
+vars = { VITE_API_URL = "https://freemarket-ivim.onrender.com/api/v1" }
